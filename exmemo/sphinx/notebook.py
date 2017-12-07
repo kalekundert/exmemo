@@ -1,54 +1,30 @@
 #!/usr/bin/env python3
 
 import re
+from .. import Workspace
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.roles import XRefRole
+from pprint import pprint
 
-## Plugin ideas
 
-# A way to display a command and the image/plot it generates.
+def add_expts_to_toc(app, docname, source):
+    """
+    Update the main TOC with the list of all the experiments.
 
-# A directive for listing reagents and product numbers.
+    The source argument is a list whose single element is the contents of the 
+    source file. You can process the contents and replace this item to 
+    implement source-level transformations.
+    """
+    if docname != 'index':
+        return
 
-# A quick way to make citations.  For example:
-#
-#     .. citation::
-#        :authors: Doench et al.
-#        :title: Rational design of highly active sgRNAs for CRISPR-Cas9-mediated 
-#        gene inactivation
-#        :journal: Nat Biotechnol
-#        :year: 2016
-#        :volume: 34:2:184-191
-#
-# That would generate:
-#
-#     <paragraph>
-#         Doench et al. 
-#         <emphasis>
-#             Rational design of highly active sgRNAs for
-#             CRISPR-Cas9-mediated gene inactivation.
-#           Nat Biotechnol (2014) 32:12:1262-1267.
-#
-# Meh, that's too verbose...
-# There's also the sphinxcontrib-bibtex extension to consider.
-#
-# Maybe I could give the directive a DOI and have it fill in everything else:
-#
-#     .. citation:: 10.1093/nar/gkw908
-#
-# or:
-#
-#     :citation:`10.1093/nar/gkw908`
-#
-# It looks like the ``metapub`` library can do this:
-#
-#     import metapub
-#
-#     pubmed = PubMedFetcher()
-#     meta = pubmed.article_by_doi('10.1093/nar/gkw908')
-#     print(meta.title, meta.authors, meta.journal, ...)
+    work = Workspace.from_dir(app.srcdir)
+    entries = [
+            str(work.get_notebook_entry(x).relative_to(app.srcdir))
+            for x in sorted(work.yield_experiments())]
 
+    source[0] = source[0].format(notebook_entries='\n   '.join(entries))
 
 def add_dates_to_toc(app, doctree):
     """
@@ -213,13 +189,11 @@ class ShowNodesDirective(Directive):
 
 
 def setup(app):
-    # Add dates to the TOC
+    app.connect('source-read', add_expts_to_toc)
     app.connect('doctree-read', add_dates_to_toc)
 
-    # Add some science-themed roles.
     app.add_role('expt', ExperimentRole())
     app.add_role('pubmed', pubmed_role)
 
-    # Add some science-themed directives.
     app.add_directive('update', UpdateDirective)
     app.add_directive('show-nodes', ShowNodesDirective)

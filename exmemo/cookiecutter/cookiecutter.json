@@ -1,0 +1,7 @@
+{
+	"full_name": "",
+    "github_username": "",
+	"project_title": "My Science Project",
+	"project_slug": "{{ cookiecutter.project_title.lower().replace(' ', '_') }}",
+    "year": ""
+}

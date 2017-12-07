@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
 import os
+import toml
 import subprocess
 from subprocess import DEVNULL
 from pathlib import Path
 from appdirs import AppDirs
+from pprint import pprint
 
 app = AppDirs('exmemo')
 
 class Workspace:
 
-    @staticmethod
-    def from_cwd(dir=None):
+    @classmethod
+    def from_dir(cls, dir):
         """
         Create a workspace object containing given directory (or the current 
         working directory, by default).  This involves descending the directory 
@@ -20,6 +22,7 @@ class Workspace:
         """
 
         def looks_like_workspace(dir):
+            nonlocal workspace
             workspace = Workspace(dir)
 
             if not workspace.rcfile.exists():
@@ -37,30 +40,50 @@ class Workspace:
 
             return True
 
-        dir = given_dir = Path(dir or '.').resolve()
+        dir = given_dir = Path(dir).resolve()
+        workspace = None
 
         while not looks_like_workspace(dir):
             dir = dir.parent
             if dir == Path('/'):
                 raise WorkspaceNotFound(given_dir)
 
-        return Workspace(dir)
+        return workspace
+
+    @classmethod
+    def from_cwd(cls):
+        """
+        Create a workspace object containing given directory (or the current 
+        working directory, by default).  This involves descending the directory 
+        hierarchy looking for the root of the project, which should contain a 
+        characteristic set of files and directories.
+        """
+        return cls.from_dir('.')
 
 
     def __init__(self, root):
         self._root = Path(root).resolve()
 
         config_paths = [
+                Path(app.site_config_dir) / 'conf.toml',
+                Path(app.user_config_dir) / 'conf.toml',
                 self.rcfile,
-                Path(app.user_config_dir),
-                Path(app.site_config_dir),
         ]
-        self._config = toml.load(
-                [x for x in config_paths if x.exists()])
+        config_paths = [
+                str(x) for x in config_paths if x.exists()
+        ]
+        if not config_paths:
+            self._config = {}
+        else:
+            self._config = toml.load(config_paths)
 
     @property
     def root_dir(self):
         return self._root
+
+    @property
+    def config(self):
+        return self._config
 
     @property
     def rcfile(self):
@@ -95,6 +118,12 @@ class Workspace:
     @property
     def yield_protocols(self):
         return self.protocols_dir.glob('*')
+
+
+    def get_notebook_entry(self, dir):
+        dir = Path(dir)
+        date, slug = dir.name.split('_', 1)
+        return dir / f"{slug}.rst"
 
     def pick_one(self, choices, no_choices=None):
         choices = list(choices)
@@ -138,14 +167,21 @@ class Workspace:
         else:
             return self.pick_one(expts)
 
-    def create_dirs(self):
-        self.root_dir.mkdir()
-        self.rcfile.touch()
-        self.analysis_dir.mkdir()
-        self.data_dir.mkdir()
-        self.documents_dir.mkdir()
-        self.notebook_dir.mkdir()
-        self.protocols_dir.mkdir()
+    def init_project(self, title):
+        from cookiecutter.main import cookiecutter
+        from click.exceptions import Abort
+        from datetime import date
+
+        url = self.config.get('cookiecutter_url') or \
+                Path(__file__).parent / 'cookiecutter'
+
+        try:
+            cookiecutter(str(url), extra_context={
+                    'project_title': title,
+                    'year': date.today().year,
+            })
+        except Abort:
+            raise KeyboardInterrupt
 
     def launch_editor(self, path):
 

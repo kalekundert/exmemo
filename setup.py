@@ -15,6 +15,15 @@ setup(
     packages=[
         'exmemo',
     ],
+    install_requires=[
+        'docopt',
+        'appdirs',
+        'sphinx',
+        'sphinx_rtd_theme',
+        'sphinxcontrib-programoutput',
+        'toml',
+        'metapub',
+    ],
     entry_points={
         'console_scripts': [
             'exmemo=exmemo.commands.exmemo:exmemo',
@@ -23,6 +32,7 @@ setup(
             'init=exmemo.commands.project:init',
             'project=exmemo.commands.project:project',
             'expt=exmemo.commands.expt:expt',
+            'config=exmemo.commands.config:config',
         ],
         'exmemo.commands.project': [
             'init=exmemo.commands.project:init',
@@ -34,7 +44,4 @@ setup(
             'open=exmemo.commands.expt:open',
         ],
     },
-    install_requires=[
-        'docopt',
-    ],
 )
