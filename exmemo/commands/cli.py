@@ -49,14 +49,14 @@ def one(iterable, too_short=None, too_long=None):
     try:
         value = next(it)
     except StopIteration:
-        raise too_short or ValueError("not enough values to unpack (expected 1, got 0)")
+        raise too_short or ValueError("not enough values to unpack (expected 1, got 0)") from None
 
     try:
         next(it)
     except StopIteration:
         pass
     else:
-        raise too_long or ValueError("too many values to unpack (expected 1)")
+        raise too_long or ValueError("too many values to unpack (expected 1)") from None
 
     return value
 

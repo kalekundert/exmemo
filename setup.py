@@ -40,6 +40,7 @@ setup(
         ],
         'exmemo.commands.expt': [
             'ls=exmemo.commands.expt:ls',
+            'new=exmemo.commands.expt:new',
             'edit=exmemo.commands.expt:edit',
             'open=exmemo.commands.expt:open',
         ],

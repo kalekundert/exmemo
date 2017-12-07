@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import docopt
 from . import cli
 from .. import Workspace
 from pprint import pprint
@@ -28,11 +27,29 @@ def ls():
         <slug>
             Only print the experiments matching the given text.
     """
-    args = docopt.docopt(ls.__doc__)
+    args = cli.parse_args_via_docopt()
     workspace = Workspace.from_cwd()
 
     for expt in workspace.yield_experiments(args['<slug>']):
         print(expt.name)
+
+def new():
+    """\
+    Create a new experiment with a blank notebook entry.
+
+    Usage:
+        exmemo expt new <title>
+
+    Arguments:
+        <title>
+            The title of the experiment.  This should be title cased, with 
+            words separated by spaces.  Use quotes so the shell won't interpret 
+            it as multiple arguments.
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+
+    work.init_experiment(args['<title>'])
 
 def edit():
     """\
@@ -51,7 +68,7 @@ def edit():
     You can specify which text editor you prefer in an `.exmemorc` file, or via 
     the $EDITOR environment variable.
     """
-    args = docopt.docopt(edit.__doc__)
+    args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
     expt = work.pick_experiment(args['<slug>'])
     path = expt / f'{expt.name[9:]}.rst'
@@ -75,7 +92,7 @@ def open():
     You can specify which terminal you prefer in an `.exmemorc` file, or via 
     the $TERMINAL environment variable.
     """
-    args = docopt.docopt(open.__doc__)
+    args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
     expt = work.pick_experiment(args['<slug>'])
 

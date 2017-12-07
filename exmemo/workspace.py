@@ -2,6 +2,7 @@
 
 import os
 import toml
+from datetime import datetime
 import subprocess
 from subprocess import DEVNULL
 from pathlib import Path
@@ -9,6 +10,21 @@ from appdirs import AppDirs
 from pprint import pprint
 
 app = AppDirs('exmemo')
+
+def ymd():
+    return datetime.today().strftime('%Y%m%d')
+
+def slug_from_title(title):
+
+    class Sanitizer: #
+        def __getitem__(self, ord): #
+            char = chr(ord)
+            if char.isalnum(): return char.lower()
+            if char in ' _-': return '_'
+            # Any other character gets dropped.
+
+    return title.translate(Sanitizer())
+
 
 class Workspace:
 
@@ -119,7 +135,6 @@ class Workspace:
     def yield_protocols(self):
         return self.protocols_dir.glob('*')
 
-
     def get_notebook_entry(self, dir):
         dir = Path(dir)
         date, slug = dir.name.split('_', 1)
@@ -170,7 +185,6 @@ class Workspace:
     def init_project(self, title):
         from cookiecutter.main import cookiecutter
         from click.exceptions import Abort
-        from datetime import date
 
         url = self.config.get('cookiecutter_url') or \
                 Path(__file__).parent / 'cookiecutter'
@@ -178,10 +192,25 @@ class Workspace:
         try:
             cookiecutter(str(url), extra_context={
                     'project_title': title,
-                    'year': date.today().year,
+                    'year': datetime.today().year,
             })
         except Abort:
             raise KeyboardInterrupt
+
+    def init_experiment(self, title):
+        slug = slug_from_title(title)
+        expt = self.notebook_dir / f'{ymd()}_{slug}'
+        rst = expt / f'{slug}.rst'
+
+        expt.mkdir()
+        with rst.open('w') as file:
+            file.write(f"""\
+{'*' * len(title)}
+{title}
+{'*' * len(title)}
+""")
+
+        self.launch_editor(rst)
 
     def launch_editor(self, path):
 
@@ -189,7 +218,7 @@ class Workspace:
         subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
 
     def launch_terminal(self, dir):
-        cmd = os.environ.get('TERMINAL', 'sakura'), dir
+        cmd = os.environ.get('TERMINAL', 'sakura'), '-d', dir
         subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
 
 
