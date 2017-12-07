@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
-import re
-with open('exmemo/__init__.py') as file:
-    version_pattern = re.compile("__version__ = '(.*)'")
-    version = version_pattern.search(file.read()).group(1)
 with open('README.rst') as file:
     readme = file.read()
 
 setup(
     name='exmemo',
-    version=version,
+    version='0.0.0',
     author='Kale Kundert',
     author_email='kale@thekunderts.net',
     long_description=readme,
@@ -24,9 +17,24 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'exmemo=exmemo:main',
+            'exmemo=exmemo.commands.exmemo:exmemo',
+        ],
+        'exmemo.commands': [
+            'init=exmemo.commands.project:init',
+            'project=exmemo.commands.project:project',
+            'expt=exmemo.commands.expt:expt',
+        ],
+        'exmemo.commands.project': [
+            'init=exmemo.commands.project:init',
+            'root=exmemo.commands.project:root',
+        ],
+        'exmemo.commands.expt': [
+            'ls=exmemo.commands.expt:ls',
+            'edit=exmemo.commands.expt:edit',
+            'open=exmemo.commands.expt:open',
         ],
     },
     install_requires=[
+        'docopt',
     ],
 )
