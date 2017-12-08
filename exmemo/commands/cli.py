@@ -126,7 +126,8 @@ def get_subcommand_briefs(group):
             brief_desc = get_docstring(func).split('.')[0] + '.'
 
         if 'usage:' in brief_desc.lower():
-            raise ValueError(f"No brief description for '{subcommand}'")
+            pprint(dir(func))
+            raise ValueError(f"No brief description for '{func.__module__}.{func.__name__}'")
 
         # Check if the function specifies what order that it should be listed 
         # in.  If not, it'll be listed alphabetically.
@@ -225,7 +226,5 @@ class MissingDependency(Exception):
     def __init__(self, group, error):
         self.group = group
         self.error = error
-
-
 
 
