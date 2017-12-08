@@ -2,12 +2,16 @@
 
 import os
 import toml
-from datetime import datetime
+import formic
+import shlex
 import subprocess
+import collections
 from subprocess import DEVNULL
+from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
 from pprint import pprint
+from . import readers
 
 app = AppDirs('exmemo')
 
@@ -24,6 +28,23 @@ def slug_from_title(title):
             # Any other character gets dropped.
 
     return title.translate(Sanitizer())
+
+def yield_paths_matching_slug(dir_or_dirs, slug=None, glob='{}', exclude=['.*'], symlinks=True):
+    if isinstance(dir_or_dirs, (str, Path)):
+        dirs = [dir_or_dirs]
+    else:
+        dirs = dir_or_dirs
+
+    glob = glob.format('*' if slug is None else f'*{slug}*')
+
+    for dir in dirs:
+        matches = formic.FileSet(
+                directory=dir,
+                include=glob,
+                exclude=exclude,
+                symlinks=symlinks,
+        )
+        yield from (Path(x) for x in matches)
 
 
 class Workspace:
@@ -122,25 +143,35 @@ class Workspace:
         return self.root_dir / 'notebook'
 
     @property
+    def protocols_dirs(self):
+        return [self.protocols_dir] + self.shared_protocols_dirs
+
+    @property
     def protocols_dir(self):
         return self.root_dir / 'protocols'
 
-    def yield_experiments(self, slug=None):
-        if slug is None:
-            return self.notebook_dir.glob('????????_*/')
-        else:
-            return self.notebook_dir.glob(f'????????_*{slug}*/')
-
     @property
-    def yield_protocols(self):
-        return self.protocols_dir.glob('*')
+    def shared_protocols_dirs(self):
+        return [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
 
-    def get_notebook_entry(self, dir):
-        dir = Path(dir)
-        date, slug = dir.name.split('_', 1)
-        return dir / f"{slug}.rst"
+    def yield_experiments(self, slug=None):
+        yield from (x.parent for x in yield_paths_matching_slug(
+            self.notebook_dir, slug, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
 
-    def pick_one(self, choices, no_choices=None):
+    def yield_protocols(self, slug=None):
+        yield from self.yield_local_protocols(slug)
+        yield from self.yield_shared_protocols(slug)
+
+    def yield_local_protocols(self, slug=None):
+        return yield_paths_matching_slug(self.protocols_dir, slug)
+
+    def yield_shared_protocols(self, slug=None):
+        return yield_paths_matching_slug(self.shared_protocols_dirs, slug)
+
+    def yield_data(self, slug=None):
+        return yield_paths_matching_slug(self.data_dir, slug)
+
+    def pick_path(self, slug, choices, no_choices=None):
         choices = list(choices)
 
         if len(choices) == 0:
@@ -148,6 +179,9 @@ class Workspace:
 
         if len(choices) == 1:
             return choices[0]
+
+        if slug is None:
+            return choices[-1]  # The most recently created.
 
         # Once I've written the config-file system, there should be an option 
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
@@ -175,12 +209,17 @@ class Workspace:
         return choices[int(choice) - 1]
 
     def pick_experiment(self, slug):
-        expts = list(self.yield_experiments(slug))
+        return self.pick_path(slug, self.yield_experiments(slug))
 
-        if slug is None:
-            return expts[-1]  # The most recently created.
-        else:
-            return self.pick_one(expts)
+    def pick_protocol(self, slug):
+        return self.pick_path(slug, self.yield_protocols(slug))
+
+    def pick_protocol_reader(self, path, args):
+        path = Path(path)
+        return readers.pick_reader(path, args)
+
+    def pick_data(self, slug):
+        return self.pick_path(slug, self.yield_data(slug))
 
     def init_project(self, title):
         from cookiecutter.main import cookiecutter
@@ -212,14 +251,37 @@ class Workspace:
 
         self.launch_editor(rst)
 
-    def launch_editor(self, path):
+    @property
+    def editor(self):
+        return self.config.get('editor', os.environ.get('EDITOR')) or 'vim'
 
-        cmd = os.environ.get('GUI_EDITOR', 'gvim'), path
-        subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
+    @property
+    def terminal(self):
+        return self.config.get('terminal', os.environ.get('TERMINAL')) or 'xterm'
+
+    @property
+    def pdf_viewer(self):
+        return self.config.get('pdf', os.environ.get('PDF')) or 'evince'
+
+    def launch_editor(self, path):
+        cmd = *shlex.split(self.editor), path
+        subprocess.Popen(cmd)
 
     def launch_terminal(self, dir):
-        cmd = os.environ.get('TERMINAL', 'sakura'), '-d', dir
-        subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
+        cmd = self.term,
+        subprocess.Popen(cmd, cwd=dir, stdout=DEVNULL, stderr=DEVNULL)
+
+    def launch_pdf(self, path):
+        cmd = self.pdf_viewer, path
+        subprocess.Popen(cmd)
+
+    def get_notebook_entry(self, dir):
+        dir = Path(dir)
+        date, slug = dir.name.split('_', 1)
+        return dir / f"{slug}.rst"
+
+    def get_data_collectors():
+        pass
 
 
 class WorkspaceNotFound(IOError):

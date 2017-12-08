@@ -23,15 +23,19 @@ setup(
         'sphinxcontrib-programoutput',
         'toml',
         'metapub',
+        'formic-py3',
     ],
     entry_points={
         'console_scripts': [
             'exmemo=exmemo.commands.exmemo:exmemo',
         ],
         'exmemo.commands': [
-            'init=exmemo.commands.project:init',
             'project=exmemo.commands.project:project',
             'expt=exmemo.commands.expt:expt',
+            'data=exmemo.commands.data:data',
+            'protocol=exmemo.commands.protocol:protocol',
+
+            'init=exmemo.commands.project:init',
             'config=exmemo.commands.config:config',
         ],
         'exmemo.commands.project': [
@@ -43,6 +47,27 @@ setup(
             'new=exmemo.commands.expt:new',
             'edit=exmemo.commands.expt:edit',
             'open=exmemo.commands.expt:open',
+        ],
+        'exmemo.commands.data': [
+            'ls=exmemo.commands.data:ls',
+            'sync=exmemo.commands.data:sync',
+            'link=exmemo.commands.data:link',
+            'gel=exmemo.commands.data:gel',
+        ],
+        'exmemo.commands.protocol': [
+            'ls=exmemo.commands.protocol:ls',
+            'show=exmemo.commands.protocol:show',
+            'print=exmemo.commands.protocol:printer',
+            'save=exmemo.commands.protocol:save',
+            'plugins=exmemo.commands.protocol:plugins',
+        ],
+        'exmemo.protocolreaders': [
+            'txt=exmemo.readers:TxtReader',
+            'exe=exmemo.readers:ScriptReader',
+            'doc=exmemo.readers:DocReader',
+            'pdf=exmemo.readers:PdfReader',
+        ],
+        'exmemo.datacollectors': [
         ],
     },
 )
