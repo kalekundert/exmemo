@@ -6,7 +6,7 @@ from pprint import pprint
 
 def project():
     """\
-    What the fuck.
+    Manage the entire project.
 
     Usage:
         exmemo project <command> [<args>...]
@@ -68,7 +68,7 @@ def root():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    print
-    pprint(args)
+
+    print(work.root_dir)
 
 
