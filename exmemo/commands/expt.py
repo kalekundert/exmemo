@@ -71,7 +71,7 @@ def edit():
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
     expt = work.pick_experiment(args['<slug>'])
-    path = expt / f'{expt.name[9:]}.rst'
+    path = work.get_notebook_entry(expt)
 
     work.launch_editor(path)
 
