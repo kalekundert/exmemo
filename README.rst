@@ -1,6 +1,5 @@
-*******************************
-Ex Memoriam
-*******************************
+.. image:: brand/logo.png
+   :align: center
 
 .. image:: https://img.shields.io/pypi/v/exmemo.svg
    :target: https://pypi.python.org/pypi/exmemo
