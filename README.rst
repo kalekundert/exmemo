@@ -7,7 +7,7 @@ Any files associated with the project are kept in a straight-forward but
 well-thought-out directory tree that you're meant to interact with in the 
 shell, and that's also a git repository.  The lab notebook is comprised of 
 plain text files (in the restructured text format) that you can write using 
-your favorite editor (which should be vim :-D).  These files are rendered to 
+your favorite editor (which should be vim 😃).  These files are rendered to 
 HTML by Sphinx (the same tool that is used to document most python projects) 
 and can either be viewed locally or uploaded to the internet.  Exmemo also 
 provides commands that let you easily refer to files in different parts of the 
