@@ -37,18 +37,18 @@ Install using pip:
 Usage
 =====
 At the moment there isn't much online documentation, but the command-line help 
-system should have any information you need:
+system should have any information you need::
 
    $ exmemo --help
 
-You can also get help for individual subcommands:
+You can also get help for individual subcommands::
 
    $ exmemo expt --help
 
 Example
 =======
 If you're just getting started with exmemo, the first step is to create a new 
-project directory:
+project directory::
 
    $ exmemo init "Silly Walks"
 
@@ -78,7 +78,7 @@ The project will have the following directories:
    files, Word documents, whatever.
 
 Let's start by creating a new entry (called an "experiment") in our lab 
-notebook:
+notebook::
 
    $ exmemo expt new "Large step with half twist"
 
