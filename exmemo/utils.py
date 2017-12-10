@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+def ymd():
+    from datetime import datetime
+    return datetime.today().strftime('%Y%m%d')
+
 def pick_one(choices):
     print("Did you mean?")
     for i, value in enumerate(choices, 1):

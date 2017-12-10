@@ -38,7 +38,7 @@ def ls():
             Only list files that contain the given substring.
     """
     args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
+    work = Workspace.from_cwd(strict=False)
 
     for n, dir in last(work.protocols_dirs):
         print(dir)
@@ -77,7 +77,7 @@ def show():
     """
     sys.argv, argv = sys.argv[:4], sys.argv[4:]
     args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
+    work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<slug>'])
     reader = readers.pick_reader(protocol, argv)
 
@@ -98,7 +98,7 @@ def printer():
     """
     sys.argv, argv = sys.argv[:4], sys.argv[4:]
     args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
+    work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<slug>'])
     reader = readers.pick_reader(protocol, argv)
 
@@ -124,7 +124,7 @@ def save():
     """
     sys.argv, argv = sys.argv[:4], sys.argv[4:]
     args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
+    work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<slug>'])
     reader = readers.pick_reader(protocol, argv)
 

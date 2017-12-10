@@ -7,7 +7,6 @@ import shlex
 import subprocess
 import collections
 from subprocess import DEVNULL
-from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
 from pprint import pprint
@@ -15,47 +14,10 @@ from . import readers, utils
 
 app = AppDirs('exmemo')
 
-def ymd():
-    return datetime.today().strftime('%Y%m%d')
-
-def slug_from_title(title):
-
-    class Sanitizer: #
-        def __getitem__(self, ord): #
-            char = chr(ord)
-            if char.isalnum(): return char.lower()
-            if char in ' _-': return '_'
-            # Any other character gets dropped.
-
-    return title.translate(Sanitizer())
-
-def iter_paths_matching_slug(dir, slug=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
-    slug = '*' if slug is None else f'*{slug}*'
-
-    if glob is None:
-        include = [f'**/{slug}', f'**/{slug}/**']  # Match files and dirs.
-    else:
-        include = glob.format(slug)
-
-    matches = sorted(
-            Path(x) for x in formic.FileSet(
-                directory=dir,
-                include=include,
-                exclude=exclude,
-                symlinks=symlinks,
-            )
-    )
-
-    if include_origin:
-        yield from ((dir, x) for x in matches)
-    else:
-        yield from matches
-
-
 class Workspace:
 
     @classmethod
-    def from_dir(cls, dir):
+    def from_dir(cls, dir, strict=True):
         """
         Create a workspace object containing given directory (or the current 
         working directory, by default).  This involves descending the directory 
@@ -88,19 +50,22 @@ class Workspace:
         while not looks_like_workspace(dir):
             dir = dir.parent
             if dir == Path('/'):
-                raise WorkspaceNotFound(given_dir)
+                if strict: raise WorkspaceNotFound(given_dir)
+                else: return Workspace(given_dir)
 
         return workspace
 
     @classmethod
-    def from_cwd(cls):
+    def from_cwd(cls, strict=True):
         """
         Create a workspace object containing given directory (or the current 
         working directory, by default).  This involves descending the directory 
         hierarchy looking for the root of the project, which should contain a 
         characteristic set of files and directories.
         """
-        return cls.from_dir(os.getenv('PWD', os.getcwd()))
+        # Use `os.getenv('PWD')` to avoid resolving symlinks, if possible.  
+        # This helps keep any paths that get outputted looking nice.
+        return cls.from_dir(os.getenv('PWD', os.getcwd()), strict)
 
 
     def __init__(self, root):
@@ -220,7 +185,7 @@ class Workspace:
 
     def init_experiment(self, title):
         slug = slug_from_title(title)
-        expt = self.notebook_dir / f'{ymd()}_{slug}'
+        expt = self.notebook_dir / f'{utils.ymd()}_{slug}'
         rst = expt / f'{slug}.rst'
 
         expt.mkdir()
@@ -263,5 +228,39 @@ class WorkspaceNotFound(IOError):
     def __init__(self, dir):
         self.message = f"'{dir}' is not a workspace."
 
+
+
+def slug_from_title(title):
+
+    class Sanitizer: #
+        def __getitem__(self, ord): #
+            char = chr(ord)
+            if char.isalnum(): return char.lower()
+            if char in ' _-': return '_'
+            # Any other character gets dropped.
+
+    return title.translate(Sanitizer())
+
+def iter_paths_matching_slug(dir, slug=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
+    slug = '*' if slug is None else f'*{slug}*'
+
+    if glob is None:
+        include = [f'**/{slug}', f'**/{slug}/**']  # Match files and dirs.
+    else:
+        include = glob.format(slug)
+
+    matches = sorted(
+            Path(x) for x in formic.FileSet(
+                directory=dir,
+                include=include,
+                exclude=exclude,
+                symlinks=symlinks,
+            )
+    )
+
+    if include_origin:
+        yield from ((dir, x) for x in matches)
+    else:
+        yield from matches
 
 
