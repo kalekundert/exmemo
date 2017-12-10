@@ -223,5 +223,5 @@ Contributing
 ============
 Exmemo is a very new project.  I'm sure there are still lots of bugs and use 
 cases I didn't consider.  Both `pull requests 
-<https://github.com/kalekundert/exmemo/pulls>` and `bug reports 
-<https://github.com/kalekundert/exmemo/issues>' are very welcome.
+<https://github.com/kalekundert/exmemo/pulls>`_ and `bug reports 
+<https://github.com/kalekundert/exmemo/issues>`_ are very welcome.
