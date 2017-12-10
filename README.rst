@@ -11,8 +11,8 @@ your favorite editor (which should be vim 😃).  These files are rendered to
 HTML by Sphinx (the same tool that is used to document most python projects) 
 and can either be viewed locally or uploaded to the internet.  Exmemo also 
 provides commands that let you easily refer to files in different parts of the 
-projects without having to type full paths, and installs a handful of 
-restructured text directives to address some common lad notebook formatting 
+project without having to type full paths, and installs a handful of 
+restructured text directives to address some common lab notebook formatting 
 needs.  Finally, both exmemo and Sphinx can be heavily extended using python, 
 so you can make your notebook work exactly how you want it to.
 
