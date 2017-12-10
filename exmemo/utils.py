@@ -4,6 +4,12 @@ def ymd():
     from datetime import datetime
     return datetime.today().strftime('%Y%m%d')
 
+def last(iterable):
+    yield from (
+            (i == len(iterable), x)
+            for i, x in enumerate(iterable, 1)
+    )
+
 def pick_one(choices):
     print("Did you mean?")
     for i, value in enumerate(choices, 1):

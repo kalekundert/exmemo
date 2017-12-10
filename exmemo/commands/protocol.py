@@ -2,15 +2,8 @@
 
 import sys
 from . import cli
-from .. import Workspace, readers
+from .. import Workspace, readers, utils
 from pprint import pprint
-
-def last(iterable):
-    yield from (
-            (i == len(iterable), x)
-            for i, x in enumerate(iterable, 1)
-    )
-
 
 def protocol():
     """\
@@ -36,15 +29,23 @@ def ls():
     Arguments:
         <slug>
             Only list files that contain the given substring.
+
+    Exmemo looks for protocols both inside and outside of the project.  Inside 
+    the project, exmemo just looks in the `protocols/` directory.  Outside the 
+    project, exmemo looks in any directory listed in the `shared_protocols` 
+    configuration option.  This makes it easy to have protocols that are shared 
+    between projects:
+    
+        shared_protocols = ['~/research/protocols']
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd(strict=False)
 
-    for n, dir in last(work.protocols_dirs):
+    for last, dir in utils.last(work.protocols_dirs):
         print(dir)
         for path in work.iter_protocols_from_dir(dir, args['<slug>']):
             print(' ', path.relative_to(dir))
-        if not n:
+        if not last:
             print()
 
 def plugins():
@@ -74,6 +75,14 @@ def show():
         <args>
             Any information that needs to be passed to the protocol.  This is 
             mostly useful for protocols that are scripts.
+
+    Exmemo looks for protocols both inside and outside of the project.  Inside 
+    the project, exmemo just looks in the `protocols/` directory.  Outside the 
+    project, exmemo looks in any directory listed in the `shared_protocols` 
+    configuration option.  This makes it easy to have protocols that are shared 
+    between projects:
+    
+        shared_protocols = ['~/research/protocols']
     """
     sys.argv, argv = sys.argv[:4], sys.argv[4:]
     args = cli.parse_args_via_docopt()
@@ -95,6 +104,14 @@ def printer():
             A string specifying the protocol to print.  You can provide any 
             substring from the name of the protocol.  If the substring is not 
             unique, you'll be asked which file you meant.
+
+    Exmemo looks for protocols both inside and outside of the project.  Inside 
+    the project, exmemo just looks in the `protocols/` directory.  Outside the 
+    project, exmemo looks in any directory listed in the `shared_protocols` 
+    configuration option.  This makes it easy to have protocols that are shared 
+    between projects:
+    
+        shared_protocols = ['~/research/protocols']
     """
     sys.argv, argv = sys.argv[:4], sys.argv[4:]
     args = cli.parse_args_via_docopt()
@@ -121,6 +138,14 @@ def save():
         <dir>
             The directory to save the protocol in.  By default this is just the 
             current working directory.
+
+    Exmemo looks for protocols both inside and outside of the project.  Inside 
+    the project, exmemo just looks in the `protocols/` directory.  Outside the 
+    project, exmemo looks in any directory listed in the `shared_protocols` 
+    configuration option.  This makes it easy to have protocols that are shared 
+    between projects:
+    
+        shared_protocols = ['~/research/protocols']
     """
     sys.argv, argv = sys.argv[:4], sys.argv[4:]
     args = cli.parse_args_via_docopt()
