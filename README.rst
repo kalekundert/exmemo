@@ -30,7 +30,7 @@ so you can make your notebook work exactly how you want it to.
 
 Installation
 ============
-Install using pip:
+Install using pip::
 
    $ pip install exmemo
 
