@@ -28,8 +28,8 @@ documents/
 notebook/
 
    A Sphinx directory with separate directories for each experiment you carry 
-   out.  An experiment is defined by asking and answering a single question, 
-   which may take a single day or several months.  Some relevant commands:
+   out.  Each experiment is meant to ask and answer a single question, whether 
+   that takes a single day or several months.  Some relevant commands:
    
    - `exmemo expt new`: Start a new experiment
    - `exmemo expt edit`: Edit an existing experiment
