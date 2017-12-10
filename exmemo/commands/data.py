@@ -34,7 +34,7 @@ def ls():
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
 
-    for path in work.yield_data(args['<slug>']):
+    for path in work.iter_data(args['<slug>']):
         print(path.relative_to(work.data_dir))
 
 def sync():

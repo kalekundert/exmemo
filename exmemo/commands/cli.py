@@ -1,82 +1,43 @@
 #!/usr/bin/env python3
 
-# I wrote this module with the intention of being able to break it out into 
-# it's own thing.
-
 import sys
 import docopt
 import textwrap
 import functools
-
-from .. import __version__
-from pkg_resources import iter_entry_points, DistributionNotFound
-from typing import NamedTuple
+from .. import __version__, utils, get_plugins
 from pprint import pprint
 
-def one(iterable, too_short=None, too_long=None):
-    """Return the only element from the iterable.
-
-    Raise an exception if the iterable is empty or longer than 1 element. For
-    example, assert that a DB query returns a single, unique result.
-
-        >>> one(['val'])
-        'val'
-
-        >>> one(['val', 'other'])  # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-        ...
-        ValueError: too many values to unpack (expected 1)
-
-        >>> one([])  # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-        ...
-        ValueError: not enough values to unpack (expected 1, got 0)
-
-    By default, ``one()`` will raise a ValueError if the iterable has the wrong 
-    number of elements.  However, you can also provide custom exceptions via 
-    the ``too_short`` and ``too_long`` arguments to raise if the iterable is 
-    either too short (i.e. empty) or too long (i.e. more than one element).
-    
-    ``one()`` attempts to advance the iterable twice in order to ensure there
-    aren't further items. Because this discards any second item, ``one()`` is
-    not suitable in situations where you want to catch its exception and then
-    try an alternative treatment of the iterable. It should be used only when a
-    iterable longer than 1 item is, in fact, an error.
-
+def run_subcommand(group, name, level=None):
     """
-    it = iter(iterable)
+    Run the subcommand with the given group and name.  This is cool because by 
+    using `pkg_resources`, other packages can add commands to `exmemo`!
+    """
+    # Find all the commands that match what the user typed.
+    known_subcommands = get_subcommands(group)
+    matching_subcommands = [
+            x for x in known_subcommands
+            if x.name.startswith(name)
+    ]
 
-    try:
-        value = next(it)
-    except StopIteration:
-        raise too_short or ValueError("not enough values to unpack (expected 1, got 0)") from None
+    # If no subcommands match, print an error message and exit.
+    if len(matching_subcommands) == 0:
+        raise UnknownSubcommand(group, name, known_subcommands)
 
-    try:
-        next(it)
-    except StopIteration:
-        pass
-    else:
-        raise too_long or ValueError("too many values to unpack (expected 1)") from None
+    # If two or more subcommands match, ask the user which one they meant.
+    if len(matching_subcommands) > 1:
+        cmd = group.split('.'); del cmd[1]
+        i = utils.pick_one(f'{" ".join(cmd)} {x.name}' for x in matching_subcommands)
+        matching_subcommands = [matching_subcommands[i]]
 
-    return value
+    # By this point, there should only be one matching subcommand.
+    assert len(matching_subcommands) == 1
+    subcommand = matching_subcommands[0]
 
+    # Put the full subcommand name in `sys.argv`, so the argument parser 
+    # doesn't need to deal with the extra complexity of partial names.
+    level = level or len(group.split('.')) - 1
+    sys.argv[level] = subcommand.name
 
-def run_subcommand(group, subcommand):
-    # Load every `exmemo` command installed on this system.  This is cool 
-    # because by using `pkg_resources`, other packages can add commands to 
-    # `exmemo`!
-    
-    entry_point = one(
-            iter_entry_points(group=group, name=subcommand),
-            UnknownSubcommand(group, subcommand),
-            OverspecifiedSubcommand(group, subcommand),
-    )
-    try:
-        entry_point.require()
-    except DistributionNotFound as error:
-        raise MissingDependency(subcommand, error)
-
-    subcommand = main(entry_point.load())
     subcommand()
 
 def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>'):
@@ -100,65 +61,43 @@ def parse_args_via_docopt():
     doc = get_caller_docstring()
     return docopt.docopt(doc)
 
+
+def get_subcommands(group):
+    return get_plugins(group)
+
 def get_subcommand_briefs(group):
-    entry_points = {
-            x.name: x.load()
-            for x in iter_entry_points(group=group)
-    }
+    subcommands = get_subcommands(group)
 
-    brief_infos = []
+    # Make sure each subcommand has a brief description.
 
-    class BriefInfo(NamedTuple): #
-        subcommand: str
-        brief_desc: str
-        importance: int
+    for subcmd in subcommands:
+        if not hasattr(subcmd, 'brief'):
 
-    for entry_point in iter_entry_points(group=group):
-        subcommand = entry_point.name
-        func = entry_point.load()
+            # Extract a brief description from the docstring.
+            subcmd.brief = get_docstring(subcmd).split('.')[0] + '.'
 
-        # Check if the function has an explicit brief message, otherwise use 
-        # the first sentence from its docstring.
+            # Complain if it looks like the docstring extraction didn't work.
+            if not subcmd.brief or 'usage:' in subcmd.brief.lower():
+                raise ValueError(f"No brief description for '{subcmd.module}.{subcmd.name}'")
 
-        try:
-            brief_desc = func.brief
-        except AttributeError:
-            brief_desc = get_docstring(func).split('.')[0] + '.'
+    # Sort the subcommands.
 
-        if 'usage:' in brief_desc.lower():
-            pprint(dir(func))
-            raise ValueError(f"No brief description for '{func.__module__}.{func.__name__}'")
-
-        # Check if the function specifies what order that it should be listed 
-        # in.  If not, it'll be listed alphabetically.
-
-        try:
-            importance = func.importance
-        except AttributeError:
-            importance = 0
-
-        info = BriefInfo(subcommand, brief_desc, importance)
-        brief_infos.append(info)
-
-    # Sort the brief descriptions
-
-    brief_infos.sort(key=lambda x: x.subcommand)
-    brief_infos.sort(key=lambda x: x.importance)
+    subcommands.sort(key=lambda x: x.lineno)
+    subcommands.sort(key=lambda x: x.priority, reverse=True)
     
     # Format the brief descriptions
 
-    sep = ':'
-    subcmd_width = max(len(x.subcommand) for x in brief_infos) + len(sep)
-    indent, padding = 4, 1
-    desc_width = 79 - subcmd_width - indent - padding
+    sep, indent, padding = ':', 4, 1
+    name_width = max(len(x.name) for x in subcommands) + len(sep)
+    brief_width = 79 - name_width - indent - padding
 
     briefs = ""
-    for info in brief_infos:
+    for subcmd in subcommands:
         briefs += (
                 f"{' ' * indent}"
-                f"{info.subcommand + sep:{subcmd_width}s}"
+                f"{subcmd.name + sep:{name_width}s}"
                 f"{' ' * padding}"
-                f"{textwrap.shorten(info.brief_desc, desc_width)}"
+                f"{textwrap.shorten(subcmd.brief, brief_width)}"
                 f"\n"
         )
 
@@ -171,7 +110,7 @@ def get_caller_docstring():
     return get_docstring(caller)
 
 def get_docstring(func):
-    return textwrap.dedent(func.__doc__).strip()
+    return textwrap.dedent(func.__doc__ or '').strip()
     
 
 def main(func):
@@ -192,39 +131,26 @@ def main(func):
     return decorator
 
 
-def brief(desc, importance=None):
+def brief(desc, priority=None):
     def decorator(f):
         f.brief = brief
-        if importance is not None:
-            f.importance = importance
+        if priority is not None:
+            f.priority = priority
         return f
     return decorator
 
-def importance(level):
+def priority(level):
     def decorator(f):
-        f.importance = level
+        f.priority = level
         return f
     return decorator
 
 
 class UnknownSubcommand(Exception):
+    show_message_and_die = True
     
-    def __init__(self, group, subcommand):
-        self.group = group
-        self.subcommand = subcommand
-
-
-class OverspecifiedSubcommand(Exception):
-    
-    def __init__(self, group, subcommand):
-        self.group = group
-        self.subcommand = subcommand
-
-
-class MissingDependency(Exception):
-    
-    def __init__(self, group, error):
-        self.group = group
-        self.error = error
+    def __init__(self, group, name, known_subcommands):
+        cmd = [*group.split('.'), name]; del cmd[1]
+        self.message = f"""Unknown command '{" ".join(cmd)}'."""
 
 

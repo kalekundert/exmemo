@@ -1,27 +1,19 @@
 #!/usr/bin/env python3
 
+import shlex
 import shutil
 import wet_copy
 import subprocess
 from pathlib import Path
 from fossilize import fossilize
-from pkg_resources import iter_entry_points, DistributionNotFound
+from pprint import pprint
 
-def get_plugins():
-    readers = []
-
-    for plugin in iter_entry_points(group='exmemo.protocolreaders'):
-        reader = plugin.load()
-        reader.name = plugin.name
-        readers.append(reader)
-
-    readers.sort(key=lambda x: x.name)
-    readers.sort(key=lambda x: x.priority, reverse=True)
-
-    return readers
+def get_readers():
+    from .plugins import get_plugins
+    return get_plugins('exmemo.protocolreaders')
 
 def pick_reader(path, args):
-    plugins = get_plugins()
+    plugins = get_readers()
 
     for plugin in plugins:
         reader = plugin(path, args)
@@ -70,21 +62,22 @@ class ScriptReader(Reader):
     }
 
     def show(self, work):
-        subprocess.run(self.command)
+        cmd = self.extensions[self.path.suffix], *self.command
+        subprocess.run(cmd)
 
     def print(self, work):
         wet_copy.print_protocol(self.command_str)
 
     def save(self, work, dir):
-        fossilize(self.path, f'{dir}/$.txt')
+        fossilize(self.command, f'{dir or "."}/$.txt')
 
     @property
     def command(self):
-        return (self.extensions[self.path.suffix], self.path, *self.args)
+        return (self.path, *self.args)
 
     @property
     def command_str(self):
-        cmd = ' '.join(shlex.quote(x) for x in self.command)
+        return ' '.join(shlex.quote(str(x)) for x in self.command)
 
 
 class DocReader(Reader):

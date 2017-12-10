@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
 from pprint import pprint
-from . import readers
+from . import readers, utils
 
 app = AppDirs('exmemo')
 
@@ -29,22 +29,27 @@ def slug_from_title(title):
 
     return title.translate(Sanitizer())
 
-def yield_paths_matching_slug(dir_or_dirs, slug=None, glob='{}', exclude=['.*'], symlinks=True):
-    if isinstance(dir_or_dirs, (str, Path)):
-        dirs = [dir_or_dirs]
+def iter_paths_matching_slug(dir, slug=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
+    slug = '*' if slug is None else f'*{slug}*'
+
+    if glob is None:
+        include = [f'**/{slug}', f'**/{slug}/**']  # Match files and dirs.
     else:
-        dirs = dir_or_dirs
+        include = glob.format(slug)
 
-    glob = glob.format('*' if slug is None else f'*{slug}*')
-
-    for dir in dirs:
-        matches = formic.FileSet(
+    matches = sorted(
+            Path(x) for x in formic.FileSet(
                 directory=dir,
-                include=glob,
+                include=include,
                 exclude=exclude,
                 symlinks=symlinks,
-        )
-        yield from (Path(x) for x in matches)
+            )
+    )
+
+    if include_origin:
+        yield from ((dir, x) for x in matches)
+    else:
+        yield from matches
 
 
 class Workspace:
@@ -77,7 +82,7 @@ class Workspace:
 
             return True
 
-        dir = given_dir = Path(dir).resolve()
+        dir = given_dir = Path(dir)
         workspace = None
 
         while not looks_like_workspace(dir):
@@ -95,11 +100,13 @@ class Workspace:
         hierarchy looking for the root of the project, which should contain a 
         characteristic set of files and directories.
         """
-        return cls.from_dir('.')
+        return cls.from_dir(os.getenv('PWD', os.getcwd()))
 
 
     def __init__(self, root):
-        self._root = Path(root).resolve()
+        # Use `os.path.abspath()` instead of `Path.resolve()` to avoid 
+        # resolving any symlinks in the path.
+        self._root = Path(os.path.abspath(root))
 
         config_paths = [
                 Path(app.site_config_dir) / 'conf.toml',
@@ -143,33 +150,28 @@ class Workspace:
         return self.root_dir / 'notebook'
 
     @property
-    def protocols_dirs(self):
-        return [self.protocols_dir] + self.shared_protocols_dirs
-
-    @property
     def protocols_dir(self):
         return self.root_dir / 'protocols'
 
     @property
-    def shared_protocols_dirs(self):
-        return [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
+    def protocols_dirs(self):
+        local_dirs = [self.protocols_dir]
+        shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
+        return [x for x in local_dirs + shared_dirs if x.exists()]
 
-    def yield_experiments(self, slug=None):
-        yield from (x.parent for x in yield_paths_matching_slug(
+    def iter_data(self, slug=None):
+        return iter_paths_matching_slug(self.data_dir, slug)
+    
+    def iter_experiments(self, slug=None):
+        yield from (x.parent for x in iter_paths_matching_slug(
             self.notebook_dir, slug, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
 
-    def yield_protocols(self, slug=None):
-        yield from self.yield_local_protocols(slug)
-        yield from self.yield_shared_protocols(slug)
+    def iter_protocols(self, slug=None):
+        for dir in self.protocols_dirs:
+            yield from iter_paths_matching_slug(dir, slug)
 
-    def yield_local_protocols(self, slug=None):
-        return yield_paths_matching_slug(self.protocols_dir, slug)
-
-    def yield_shared_protocols(self, slug=None):
-        return yield_paths_matching_slug(self.shared_protocols_dirs, slug)
-
-    def yield_data(self, slug=None):
-        return yield_paths_matching_slug(self.data_dir, slug)
+    def iter_protocols_from_dir(self, dir, slug=None):
+        yield from iter_paths_matching_slug(dir, slug)
 
     def pick_path(self, slug, choices, no_choices=None):
         choices = list(choices)
@@ -185,41 +187,21 @@ class Workspace:
 
         # Once I've written the config-file system, there should be an option 
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
-        print("Did you mean?")
-        for i, value in enumerate(choices, 1):
-            print(f"({i}) {value.name}")
+        i = utils.pick_one(x.name for x in choices)
+        return choices[i]
 
-        def is_input_ok(x):
-            try: x = int(x)
-            except ValueError:
-                return False
-
-            if x < 1 or x > len(choices):
-                return False
-
-            return True
-
-        prompt = '> '
-        choice = input(prompt)
-        
-        while not is_input_ok(choice):
-            print(f"Please enter a number between 1 and {len(choices)}.")
-            choice = input(prompt)
-
-        return choices[int(choice) - 1]
+    def pick_data(self, slug):
+        return self.pick_path(slug, self.iter_data(slug))
 
     def pick_experiment(self, slug):
-        return self.pick_path(slug, self.yield_experiments(slug))
+        return self.pick_path(slug, self.iter_experiments(slug))
 
     def pick_protocol(self, slug):
-        return self.pick_path(slug, self.yield_protocols(slug))
+        return self.pick_path(slug, self.iter_protocols(slug))
 
     def pick_protocol_reader(self, path, args):
         path = Path(path)
         return readers.pick_reader(path, args)
-
-    def pick_data(self, slug):
-        return self.pick_path(slug, self.yield_data(slug))
 
     def init_project(self, title):
         from cookiecutter.main import cookiecutter
@@ -251,28 +233,19 @@ class Workspace:
 
         self.launch_editor(rst)
 
-    @property
-    def editor(self):
-        return self.config.get('editor', os.environ.get('EDITOR')) or 'vim'
-
-    @property
-    def terminal(self):
-        return self.config.get('terminal', os.environ.get('TERMINAL')) or 'xterm'
-
-    @property
-    def pdf_viewer(self):
-        return self.config.get('pdf', os.environ.get('PDF')) or 'evince'
-
     def launch_editor(self, path):
-        cmd = *shlex.split(self.editor), path
+        editor = self.config.get('editor', os.environ.get('EDITOR')) or 'vim'
+        cmd = *shlex.split(editor), path
         subprocess.Popen(cmd)
 
     def launch_terminal(self, dir):
-        cmd = self.term,
+        term = self.config.get('terminal', os.environ.get('TERMINAL')) or 'xterm'
+        cmd = shlex.split(term)
         subprocess.Popen(cmd, cwd=dir, stdout=DEVNULL, stderr=DEVNULL)
 
     def launch_pdf(self, path):
-        cmd = self.pdf_viewer, path
+        pdf = self.config.get('pdf', os.environ.get('PDF')) or 'evince'
+        cmd = *shlex.split(pdf), path
         subprocess.Popen(cmd)
 
     def get_notebook_entry(self, dir):

@@ -22,7 +22,7 @@ def add_expts_to_toc(app, docname, source):
     work = Workspace.from_dir(app.srcdir)
     entries = [
             str(work.get_notebook_entry(x).relative_to(app.srcdir))
-            for x in sorted(work.yield_experiments())]
+            for x in sorted(work.iter_experiments())]
 
     source[0] = source[0].format(notebook_entries='\n   '.join(entries))
 

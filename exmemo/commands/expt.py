@@ -30,7 +30,7 @@ def ls():
     args = cli.parse_args_via_docopt()
     workspace = Workspace.from_cwd()
 
-    for expt in workspace.yield_experiments(args['<slug>']):
+    for expt in workspace.iter_experiments(args['<slug>']):
         print(expt.name)
 
 def new():
