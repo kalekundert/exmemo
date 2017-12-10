@@ -98,3 +98,20 @@ def open():
 
     work.launch_terminal(expt)
 
+def build():
+    """\
+    Render the lab notebook to HTML using Sphinx.
+
+    Usage:
+        exmemo expt build [-f]
+
+    Options:
+        -f --force
+            Force Sphinx to rebuild the whole project from scratch, rather than 
+            just building the files that changed since last time.  You often 
+            need to do this after you add a new experiment.
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+
+    work.build_notebook(args['--force'])

@@ -47,6 +47,7 @@ setup(
             'new=exmemo.commands.expt:new',
             'edit=exmemo.commands.expt:edit',
             'open=exmemo.commands.expt:open',
+            'build=exmemo.commands.expt:build',
         ],
         'exmemo.commands.data': [
             'ls=exmemo.commands.data:ls',

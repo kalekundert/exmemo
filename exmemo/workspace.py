@@ -217,6 +217,14 @@ class Workspace:
         from . import collectors
         collectors.sync_data(self)
 
+    def build_notebook(self, force=False):
+        if force:
+            make = 'make', 'clean', 'html'
+        else:
+            make = 'make', 'html'
+
+        subprocess.run(make, cwd=self.notebook_dir)
+
     def get_notebook_entry(self, dir):
         dir = Path(dir)
         date, slug = dir.name.split('_', 1)
