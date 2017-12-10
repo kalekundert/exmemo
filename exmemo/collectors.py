@@ -10,7 +10,7 @@ def get_collectors():
     from .plugins import get_plugins
     return {x.name: x for x in get_plugins('exmemo.datacollectors')}
 
-def sync_data(work):
+def sync_data(work, verbose):
     collectors = get_collectors()
 
     for config in work.config.get('data', []):
@@ -23,21 +23,18 @@ def sync_data(work):
             raise UnknownCollectorType(type, collectors)
 
         collector = collector_cls(**config)
-        collector.sync(work)
+        collector.sync(work, verbose)
+
+def run(cmd, verbose=True, **kwargs):
+    if cmd is None:
+        return
+    if verbose:
+        cmd_str = cmd if isinstance(cmd, str) else ' '.join(str(x) for x in cmd)
+        print(f'$ {cmd_str}')
+    return subprocess.run(cmd, **kwargs)
 
 
-class VerboseMixin:
-
-    def run(self, cmd, **kwargs):
-        if cmd is None:
-            return
-        if self.verbose:
-            cmd_str = cmd if isinstance(cmd, str) else ' '.join(str(x) for x in cmd)
-            print(f'$ {cmd_str}')
-        return subprocess.run(cmd, **kwargs)
-
-
-class RsyncCollector(VerboseMixin):
+class RsyncCollector:
 
     def __init__(self, src, dest=None, cmd=None, precmd=None, postcmd=None, verbose=False):
         # Use `os.path.expanduser()` for `src` because it doesn't clobber 
@@ -49,17 +46,17 @@ class RsyncCollector(VerboseMixin):
         self.postcmd = postcmd
         self.verbose = verbose
 
-    def sync(self, work):
+    def sync(self, work, verbose):
         dest = work.data_dir / self.dest
         rsync = shlex.split(self.cmd.format(src=self.src, dest=dest))
 
         for precmd in self.precmd.split('\n'):
-            self.run(precmd, cwd=work.data_dir, shell=True)
+            run(precmd, verbose, cwd=work.data_dir, shell=True)
 
-        self.run(rsync)
+        run(rsync, verbose)
 
         for postcmd in self.postcmd.split('\n'):
-            self.run(postcmd, cwd=work.data_dir, shell=True)
+            run(postcmd, verbose, cwd=work.data_dir, shell=True)
     
 
 class UsbCollector(RsyncCollector):
@@ -68,7 +65,7 @@ class UsbCollector(RsyncCollector):
         super().__init__(src, dest, rsync, precmd, postcmd, verbose)
         self.mountpoint = mountpoint and Path(mountpoint).expanduser()
 
-    def sync(self, work):
+    def sync(self, work, verbose):
         """
         Copy files from the given location on a USB drive into the project.
         """
@@ -88,7 +85,7 @@ class UsbCollector(RsyncCollector):
 
             if not is_mounted():
                 cmd = 'mount', self.mountpoint
-                err = self.run(cmd).returncode
+                err = run(cmd, verbose).returncode
                 umount_when_done = (err == 0)
 
         if os.path.exists(self.src):
@@ -98,7 +95,7 @@ class UsbCollector(RsyncCollector):
 
         if umount_when_done:
             cmd = 'umount', self.mountpoint
-            err = self.run(cmd).returncode
+            err = run(cmd, verbose).returncode
             if not err:
                 print("USB safe to remove.")
 

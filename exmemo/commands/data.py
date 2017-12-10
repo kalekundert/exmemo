@@ -42,7 +42,11 @@ def sync():
     Import data into the project from any available source.
 
     Usage:
-        exmemo data sync
+        exmemo data sync [-v]
+
+    Options:
+        -v --verbose
+            Print out each command that is run to sync the data.
 
     You can define data sources in any of your config files.  Each data source 
     must have a type and any arguments defined by that type.  For example:
@@ -57,7 +61,11 @@ def sync():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    work.sync_data()
+
+    # Add usage text for each collector to the docstring.
+    #from ..collectors import get_collectors
+
+    work.sync_data(args['--verbose'])
 
 def link():
     """

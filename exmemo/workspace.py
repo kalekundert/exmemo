@@ -213,9 +213,9 @@ class Workspace:
         cmd = *shlex.split(pdf), path
         subprocess.Popen(cmd)
 
-    def sync_data(self):
+    def sync_data(self, verbose):
         from . import collectors
-        collectors.sync_data(self)
+        collectors.sync_data(self, verbose)
 
     def build_notebook(self, force=False):
         if force:
