@@ -204,11 +204,29 @@ Exmemo has some other features as well, but this covers the main workflow.
 Again, the command-line help messages are pretty good, so start there if you're 
 looking for more details.
 
+Collaborating
+=============
+If you want other people to be able to read your notebook without necessarily 
+being able to edit it, the best option is to publish the HTML files generated 
+by Sphinx on the internet somewhere.  If you don't mind your files being public 
+(or are willing to pay to keep them private), ReadTheDocs is a nice service for 
+this.  Otherwise it's not to hard to setup a webserver that uses Apache 
+authentication to keep your files private.
+
+If you want other people to be able to read and edit your notebook, the best 
+option is to use git.  The project directory is already a git repository, so 
+you just need to push it to GitHub and add anyone you want to work with as a 
+collaborator.  As before, you can either pay GitHub or setup your own git 
+server if you want to keep your files private (although GitHub is often willing 
+to give free private repositories to academic researchers).
+
 Aliases
 =======
 The exmemo commands are rather verbose, which is not ideal for things you want 
-to be typing all the time.  For that reason, I use the following set of shell 
-aliases::
+to be typing all the time.  You can make them a little shorter by only typing 
+the first few letters of each subcommand (i.e. ``exmemo ex ed`` instead of 
+``exmemo expt edit``), but it's still not ideal.  For that reason, I use the 
+following set of shell aliases::
 
    alias en='exmemo expt new'
    alias ee='exmemo expt edit'
