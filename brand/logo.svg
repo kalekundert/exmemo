@@ -3748,7 +3748,9 @@
      inkscape:groupmode="layer">
     <g
        id="g1581"
-       clip-path="url(#clipPath1595)">
+       clip-path="url(#clipPath1595)"
+       inkscape:export-xdpi="48"
+       inkscape:export-ydpi="48">
       <rect
          style="opacity:1;fill:#f5be23;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.99999976;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal;filter:url(#filter20402)"
          id="rect1553"
@@ -4482,7 +4484,9 @@
      inkscape:label="text">
     <g
        id="g1551"
-       transform="translate(98.22897,-267.37009)">
+       transform="translate(98.22897,-267.37009)"
+       inkscape:export-xdpi="48"
+       inkscape:export-ydpi="48">
       <text
          id="text1450-4"
          y="379.88092"
