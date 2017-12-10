@@ -39,11 +39,11 @@ class VerboseMixin:
 
 class RsyncCollector(VerboseMixin):
 
-    def __init__(self, src, dest, cmd=None, precmd=None, postcmd=None, verbose=False):
+    def __init__(self, src, dest=None, cmd=None, precmd=None, postcmd=None, verbose=False):
         # Use `os.path.expanduser()` for `src` because it doesn't clobber 
         # trailing slashes, which are significant to rsync.
         self.src = os.path.expanduser(src)
-        self.dest = Path(dest).expanduser()
+        self.dest = Path(dest or '').expanduser()
         self.cmd = cmd or 'rsync --archive --ignore-existing {src} {dest}'
         self.precmd = precmd
         self.postcmd = postcmd
