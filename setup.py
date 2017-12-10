@@ -68,6 +68,8 @@ setup(
             'pdf=exmemo.readers:PdfReader',
         ],
         'exmemo.datacollectors': [
+            'rsync=exmemo.collectors:RsyncCollector',
+            'usb=exmemo.collectors:UsbCollector',
         ],
     },
 )

@@ -213,6 +213,10 @@ class Workspace:
         cmd = *shlex.split(pdf), path
         subprocess.Popen(cmd)
 
+    def sync_data(self):
+        from . import collectors
+        collectors.sync_data(self)
+
     def get_notebook_entry(self, dir):
         dir = Path(dir)
         date, slug = dir.name.split('_', 1)

@@ -42,25 +42,22 @@ def sync():
     Import data into the project from any available source.
 
     Usage:
-        exmemo data sync [<dest>...]
+        exmemo data sync
 
-    Arguments:
-        <dest>
-            Only attempt to sync data for the given destination(s).  By 
-            default, any data that is available will be synced.
-
-    You can define data sources in either your in-project or user-wide config 
-    files.  Each data source has a driver and a destination.  For example:
+    You can define data sources in any of your config files.  Each data source 
+    must have a type and any arguments defined by that type.  For example:
 
         [[data]]
-        driver: rsync
-        source: ~/usb/gels
+        type: usb
+        src: ~/usb/gels
         dest: gels
 
     This specifies that data from `~/usb/gels` should be copied into the `gels` 
     directory within the data directory of the project using `rsync`.
     """
-    raise NotImplementedError
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+    work.sync_data()
 
 def link():
     """
