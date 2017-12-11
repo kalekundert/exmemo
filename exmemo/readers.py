@@ -47,6 +47,9 @@ class TxtReader(Reader):
         with self.path.open() as file:
             print(file.read().strip())
 
+    def edit(self, work):
+        work.launch_editor(self.path)
+
     def print(self, work):
         wet_copy.print_protocol(self.path)
 
@@ -64,6 +67,9 @@ class ScriptReader(Reader):
     def show(self, work):
         cmd = self.extensions[self.path.suffix], *self.command
         subprocess.run(cmd)
+
+    def edit(self, work):
+        work.launch_editor(self.path)
 
     def print(self, work):
         wet_copy.print_protocol(self.command_str)
@@ -88,6 +94,9 @@ class DocReader(Reader):
         cmd = 'libreoffice', self.path
         subprocess.Popen(cmd)
 
+    def edit(self, work):
+        raise CantEditProtocol(self)
+
     def print(self, work):
         office = 'libreoffice', '--headless', '--invisible', '--convert-to-pdf', self.path
         lpr = 'lpr', '-o', 'sides=one-sided', f'{self.path.stem}.pdf'
@@ -103,6 +112,9 @@ class PdfReader(Reader):
     def show(self, work):
         work.launch_pdf(self.path)
 
+    def edit(self, work):
+        raise CantEditProtocol(self)
+
     def print(self, work):
         lpr = 'lpr', '-o', 'sides=one-sided', f'{self.path}'
         subprocess.run(lpr)
@@ -116,3 +128,12 @@ class CantReadProtocol(Exception):
         self.message = f"""\
 Can't read '{' '.join([str(path), *args])}'.
 Tried using the following plugins: {', '.join(x.name for x in plugins)}"""
+
+
+class CantEditProtocol(Exception):
+    show_message_and_die = True
+
+    def __init__(self, reader):
+        self.message = f"""\
+Can't edit '{reader.path}'.
+Editing is not supported by the '{reader.name}' plugin."""

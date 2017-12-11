@@ -58,6 +58,7 @@ setup(
         'exmemo.commands.protocol': [
             'ls=exmemo.commands.protocol:ls',
             'show=exmemo.commands.protocol:show',
+            'edit=exmemo.commands.protocol:edit',
             'print=exmemo.commands.protocol:printer',
             'save=exmemo.commands.protocol:save',
             'plugins=exmemo.commands.protocol:plugins',
