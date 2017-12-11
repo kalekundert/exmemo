@@ -110,9 +110,9 @@ When you want to recompile the HTML pages for your notebook, run this command::
 
    $ exmemo note build
 
-Now lets say that we're about to go into lab and setup a reaction.  We can 
-start by printing out a paper copy of the protocol we want to follow.  (I like 
-doing this because I can take notes as I'm working on the paper, then 
+Now lets say that we're about to go into lab and actually do an experiment.  We 
+can start by printing out a paper copy of the protocol we want to follow.  (I 
+like doing this because I can take notes as I'm working on the paper, then 
 transcribe any that are significant back into my notebook when I'm done.)::
 
    $ exmemo protocol print treadmill
