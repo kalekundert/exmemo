@@ -25,9 +25,6 @@ so you can make your notebook work exactly how you want it to.
 .. image:: https://img.shields.io/travis/kalekundert/exmemo.svg
    :target: https://travis-ci.org/kalekundert/exmemo
 
-.. image:: https://img.shields.io/coveralls/kalekundert/exmemo.svg
-   :target: https://coveralls.io/github/kalekundert/exmemo?branch=master
-
 Installation
 ============
 Install using pip::
