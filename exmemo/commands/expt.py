@@ -4,6 +4,7 @@ from . import cli
 from .. import Workspace
 from pprint import pprint
 
+@cli.priority(30)
 def new():
     """\
     Create a new experiment with a blank notebook entry.
@@ -22,6 +23,7 @@ def new():
 
     work.init_experiment(args['<title>'])
 
+@cli.priority(30)
 def edit():
     """\
     Open the notebook entry for the given experiment in a text editor.
@@ -46,6 +48,7 @@ def edit():
 
     work.launch_editor(path)
 
+@cli.priority(30)
 def open():
     """\
     Open a new terminal cd'd into the given experiment.
@@ -69,6 +72,7 @@ def open():
 
     work.launch_terminal(expt)
 
+@cli.priority(30)
 def build():
     """\
     Render the lab notebook to HTML using Sphinx.

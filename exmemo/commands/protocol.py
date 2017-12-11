@@ -5,6 +5,7 @@ from . import cli
 from .. import Workspace, readers, utils
 from pprint import pprint
 
+@cli.priority(20)
 def show():
     """\
     Display the given protocol.
@@ -38,6 +39,7 @@ def show():
 
     reader.show(work)
 
+@cli.priority(20)
 def printer():
     """\
     Print the given protocol.
@@ -67,6 +69,7 @@ def printer():
 
     reader.print(work)
 
+@cli.priority(20)
 def save():
     """\
     Save the protocol to a date-stamped text file that can be included in your 

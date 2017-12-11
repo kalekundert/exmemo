@@ -4,6 +4,7 @@ from . import cli
 from .. import Workspace
 from pprint import pprint
 
+@cli.priority(40)
 def init():
     """\
     Create a directory layout for a new project.  This layout will include 

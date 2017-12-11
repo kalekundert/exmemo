@@ -9,7 +9,7 @@ def config():
     Dump all the configuration values for the current project.
 
     Usage:
-        exmemo config
+        exmemo debug config
 
     Each project reads configuration information from three different files.  
     Typical paths for a Linux system are given below:

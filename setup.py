@@ -44,7 +44,7 @@ setup(
             'expt=exmemo.commands.main:expt',
             'protocol=exmemo.commands.main:protocol',
             'data=exmemo.commands.main:data',
-            'config=exmemo.commands.config:config',
+            'debug=exmemo.commands.main:debug',
         ],
         'exmemo.commands.project': [
             'init=exmemo.commands.project:init',
@@ -70,6 +70,9 @@ setup(
             'save=exmemo.commands.protocol:save',
             'plugins=exmemo.commands.protocol:plugins',
             'ls=exmemo.commands.protocol:ls',
+        ],
+        'exmemo.commands.debug': [
+            'show=exmemo.commands.debug:config',
         ],
         'exmemo.protocolreaders': [
             'txt=exmemo.readers:TxtReader',

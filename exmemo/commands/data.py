@@ -6,6 +6,7 @@ from .. import Workspace
 from pathlib import Path
 from pprint import pprint
 
+@cli.priority(10)
 def sync():
     """\
     Import data into the project from any available source.
@@ -36,6 +37,7 @@ def sync():
 
     work.sync_data(args['--verbose'])
 
+@cli.priority(10)
 def link():
     """
     Make a symbolic link to the indicated data file.

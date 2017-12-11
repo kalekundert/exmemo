@@ -74,3 +74,17 @@ def data():
     """
     cli.run_subcommand_via_docopt('exmemo.commands.data')
 
+def debug():
+    """\
+    Print information that can help diagnose problems with exmemo.
+
+    Usage:
+        exmemo debug <command> [<args>...]
+        exmemo debug (-h | --help)
+        exmemo debug --version
+
+    Commands:
+        {subcommands}
+    """
+    cli.run_subcommand_via_docopt('exmemo.commands.debug')
+
