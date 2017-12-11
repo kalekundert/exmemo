@@ -4,41 +4,12 @@ from . import cli
 from .. import Workspace
 from pprint import pprint
 
-def expt():
-    """\
-    Keep notes on your day-to-day experiments.
-
-    Usage:
-        exmemo expt <command> [<args>...]
-
-    Commands:
-        {subcommands}
-    """
-    cli.run_subcommand_via_docopt('exmemo.commands.expt', 2)
-
-def ls():
-    """\
-    Print the names of any existing experiments.
-
-    Usage:
-        exmemo expt ls [<slug>]
-
-    Arguments:
-        <slug>
-            Only print the experiments matching the given text.
-    """
-    args = cli.parse_args_via_docopt()
-    workspace = Workspace.from_cwd()
-
-    for expt in workspace.iter_experiments(args['<slug>']):
-        print(expt.name)
-
 def new():
     """\
     Create a new experiment with a blank notebook entry.
 
     Usage:
-        exmemo expt new <title>
+        exmemo [expt] new <title>
 
     Arguments:
         <title>
@@ -56,7 +27,7 @@ def edit():
     Open the notebook entry for the given experiment in a text editor.
 
     Usage:
-        exmemo expt edit [<slug>]
+        exmemo [expt] edit [<slug>]
 
     Arguments:
         <slug>
@@ -80,7 +51,7 @@ def open():
     Open a new terminal cd'd into the given experiment.
 
     Usage:
-        exmemo expt open [<slug>]
+        exmemo [expt] open [<slug>]
 
     Arguments:
         <slug>
@@ -103,7 +74,7 @@ def build():
     Render the lab notebook to HTML using Sphinx.
 
     Usage:
-        exmemo expt build [-f]
+        exmemo [expt] build [-f]
 
     Options:
         -f --force
@@ -115,3 +86,21 @@ def build():
     work = Workspace.from_cwd()
 
     work.build_notebook(args['--force'])
+
+def ls():
+    """\
+    Print the names of any existing experiments.
+
+    Usage:
+        exmemo expt ls [<slug>]
+
+    Arguments:
+        <slug>
+            Only print the experiments matching the given text.
+    """
+    args = cli.parse_args_via_docopt()
+    workspace = Workspace.from_cwd()
+
+    for expt in workspace.iter_experiments(args['<slug>']):
+        print(expt.name)
+

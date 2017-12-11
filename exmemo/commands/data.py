@@ -6,43 +6,12 @@ from .. import Workspace
 from pathlib import Path
 from pprint import pprint
 
-def data():
-    """\
-    Interact with data files.
-
-    Usage:
-        exmemo data <command> [<args>...]
-        exmemo data (-h | --help)
-        exmemo data --version
-
-    Commands:
-        {subcommands}
-    """
-    cli.run_subcommand_via_docopt('exmemo.commands.data', 2)
-
-def ls():
-    """\
-    List data files.
-
-    Usage:
-        exmemo data ls [<slug>]
-
-    Arguments:
-        <slug>
-            Only list files that contain the given substring.
-    """
-    args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
-
-    for path in work.iter_data(args['<slug>']):
-        print(path.relative_to(work.data_dir))
-
 def sync():
     """\
     Import data into the project from any available source.
 
     Usage:
-        exmemo data sync [-v]
+        exmemo [data] sync [-v]
 
     Options:
         -v --verbose
@@ -72,7 +41,7 @@ def link():
     Make a symbolic link to the indicated data file.
 
     Usage:
-        exmemo data link <slug> [<dir>]
+        exmemo [data] link <slug> [<dir>]
 
     Arguments
         <slug>
@@ -136,6 +105,23 @@ def gel():
 
     subprocess.run(convert)
     subprocess.Popen(gimp)
+
+def ls():
+    """\
+    List data files.
+
+    Usage:
+        exmemo data ls [<slug>]
+
+    Arguments:
+        <slug>
+            Only list files that contain the given substring.
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+
+    for path in work.iter_data(args['<slug>']):
+        print(path.relative_to(work.data_dir))
 
 
 class FileAlreadyExists(Exception):

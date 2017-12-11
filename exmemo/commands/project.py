@@ -4,21 +4,6 @@ from . import cli
 from .. import Workspace
 from pprint import pprint
 
-def project():
-    """\
-    Manage the entire project.
-
-    Usage:
-        exmemo project <command> [<args>...]
-        exmemo project (-h | --help)
-        exmemo project --version
-
-    Commands:
-        {subcommands}
-    """
-
-    cli.run_subcommand_via_docopt('exmemo.commands.project')
-
 def init():
     """\
     Create a directory layout for a new project.  This layout will include 

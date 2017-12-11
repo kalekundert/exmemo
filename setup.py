@@ -27,15 +27,23 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'exmemo=exmemo.commands.exmemo:exmemo',
+            'exmemo=exmemo.commands.main:main',
         ],
         'exmemo.commands': [
-            'project=exmemo.commands.project:project',
-            'expt=exmemo.commands.expt:expt',
-            'data=exmemo.commands.data:data',
-            'protocol=exmemo.commands.protocol:protocol',
-
             'init=exmemo.commands.project:init',
+            'new=exmemo.commands.expt:new',
+            'edit=exmemo.commands.expt:edit',
+            'open=exmemo.commands.expt:open',
+            'build=exmemo.commands.expt:build',
+            'show=exmemo.commands.protocol:show',
+            'print=exmemo.commands.protocol:printer',
+            'save=exmemo.commands.protocol:save',
+            'sync=exmemo.commands.data:sync',
+            'link=exmemo.commands.data:link',
+            'project=exmemo.commands.main:project',
+            'expt=exmemo.commands.main:expt',
+            'protocol=exmemo.commands.main:protocol',
+            'data=exmemo.commands.main:data',
             'config=exmemo.commands.config:config',
         ],
         'exmemo.commands.project': [
@@ -43,25 +51,25 @@ setup(
             'root=exmemo.commands.project:root',
         ],
         'exmemo.commands.expt': [
-            'ls=exmemo.commands.expt:ls',
             'new=exmemo.commands.expt:new',
             'edit=exmemo.commands.expt:edit',
             'open=exmemo.commands.expt:open',
             'build=exmemo.commands.expt:build',
+            'ls=exmemo.commands.expt:ls',
         ],
         'exmemo.commands.data': [
-            'ls=exmemo.commands.data:ls',
             'sync=exmemo.commands.data:sync',
             'link=exmemo.commands.data:link',
             'gel=exmemo.commands.data:gel',
+            'ls=exmemo.commands.data:ls',
         ],
         'exmemo.commands.protocol': [
-            'ls=exmemo.commands.protocol:ls',
             'show=exmemo.commands.protocol:show',
             'edit=exmemo.commands.protocol:edit',
             'print=exmemo.commands.protocol:printer',
             'save=exmemo.commands.protocol:save',
             'plugins=exmemo.commands.protocol:plugins',
+            'ls=exmemo.commands.protocol:ls',
         ],
         'exmemo.protocolreaders': [
             'txt=exmemo.readers:TxtReader',
