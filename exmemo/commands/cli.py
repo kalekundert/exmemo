@@ -40,13 +40,13 @@ def run_subcommand(group, name, level=None):
 
     subcommand()
 
-def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>'):
+def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>', **format_args):
     doc = doc or get_caller_docstring()
     briefs = get_subcommand_briefs(group)
     level = level or len(group.split('.')) - 1
 
     args = docopt.docopt(
-            doc=doc.format(subcommands=briefs),
+            doc=doc.format(subcommands=briefs, **format_args),
             argv=sys.argv[1:level+1],
             version=__version__,
     )
@@ -57,9 +57,9 @@ def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>'):
 
     return False
 
-def parse_args_via_docopt():
+def parse_args_via_docopt(**format_args):
     doc = get_caller_docstring()
-    return docopt.docopt(doc)
+    return docopt.docopt(doc.format(**format_args))
 
 
 def get_subcommands(group):

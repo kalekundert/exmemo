@@ -41,24 +41,24 @@ class RsyncCollector:
     options are recognized:
 
     src (required):
-       The file or directory to copy.  If you want to specify a directory, 
-       remember that trailing slashes are significant to rsync: 'some/dir' means 
-       copy dir itself, 'some/dir/' means copy only the files inside dir.
+        The file or directory to copy.  If you want to specify a directory, 
+        remember that trailing slashes are significant to rsync: 'dir' 
+        means copy dir itself, 'dir/' means copy only the files inside dir.
        
     dest (default: '.'):
-       Where to copy the files to, relative to the project data directory.
+        Where to copy the files to, relative to the project data directory.
        
-    cmd (default: 'rsync --archive --ignoe-existing {src} {dest}'):
-       The rsync command to execute.  {src} and {dest} will be replaced with the 
-       values of the `src` and `dest` options, respectively.  The purpose of 
-       this option is to allow you to pass rsync different flags, or even to run 
-       a different command entirely.
+    cmd (default: 'rsync --archive --ignore-existing {src} {dest}'):
+        The rsync command to execute.  {src} and {dest} will be replaced 
+        with the values of the `src` and `dest` options, respectively.  The 
+        purpose of this option is to allow you to pass rsync different 
+        flags, or even to run a different command entirely.
 
     precmd (default: ''):
-       A shell command to execute before running rsync.
+        A shell command to execute before running rsync.
 
     postcmd (default: ''):
-       A shell command to execute after running rsync.
+        A shell command to execute after running rsync.
     """
 
     def __init__(self, src, dest=None, cmd=None, precmd=None, postcmd=None):
@@ -91,32 +91,31 @@ class UsbCollector(RsyncCollector):
     here.
     
     src (required):
-       The file or directory to copy.  If you want to specify a directory, 
-       remember that trailing slashes are significant to rsync: 'some/dir' 
-       means copy dir itself, 'some/dir/' means copy only the files inside 
-       dir.
+        The file or directory to copy.  If you want to specify a directory, 
+        remember that trailing slashes are significant to rsync: 'dir' 
+        means copy dir itself, 'dir/' means copy only the files inside dir.
        
     dest (default: '.'):
-       Where to copy the files to, relative to the project data directory.
+        Where to copy the files to, relative to the project data directory.
 
     mountpoint (default: None):
-       The directory where the USB drive is mounted.  If this is specified, 
-       exmemo will attempt to automatically mount and unmount the USB drive 
-       if it can't otherwise locate the files.  If this option is not 
-       specified, the USB drive must be mounted before the sync command is 
-       run.
+        The directory where the USB drive is mounted.  If this is 
+        specified, exmemo will attempt to automatically mount and unmount 
+        the USB drive if it can't otherwise locate the files.  If this 
+        option is not specified, the USB drive must be mounted before the 
+        sync command is run.
        
-    cmd (default: 'rsync --archive --ignoe-existing {src} {dest}'):
-       The rsync command to execute.  {src} and {dest} will be replaced 
-       with the values of the `src` and `dest` options, respectively.  The 
-       purpose of this option is to allow you to pass rsync different 
-       flags, or even to run a different command entirely.
+    cmd (default: 'rsync --archive --ignore-existing {src} {dest}'):
+        The rsync command to execute.  {src} and {dest} will be replaced 
+        with the values of the `src` and `dest` options, respectively.  The 
+        purpose of this option is to allow you to pass rsync different 
+        flags, or even to run a different command entirely.
 
     precmd (default: ''):
-       A shell command to execute before running rsync.
+        A shell command to execute before running rsync.
 
     postcmd (default: ''):
-       A shell command to execute after running rsync.
+        A shell command to execute after running rsync.
     """
 
     def __init__(self, src, dest, mountpoint=None, rsync=None, precmd=None, postcmd=None):

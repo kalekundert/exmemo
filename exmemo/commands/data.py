@@ -2,7 +2,7 @@
 
 import subprocess
 from . import cli
-from .. import Workspace
+from .. import Workspace, utils
 from pathlib import Path
 from pprint import pprint
 
@@ -29,7 +29,7 @@ def sync():
         that_option = ...
 
     The type specifies the algorithm that will be used to find and import files.  
-    The following types are currently installed:
+    The following types of data collectors are currently installed:
 
     {installed_collectors}
 
@@ -37,7 +37,7 @@ def sync():
     write your own.  Each collector is just a class that adheres to the following 
     interface:
 
-       class MyCollector:
+       {cls} MyCollector:
            \"\"\"
            Description of options...
            \"\"\"
@@ -57,7 +57,10 @@ def sync():
     interface, register it with the 'exmemo.datacollectors' entry point via the 
     setuptools plugin API, and it'll be available to use.
     """
-    args = cli.parse_args_via_docopt()
+    args = cli.parse_args_via_docopt(
+            cls='class',
+            installed_collectors=format_collectors_for_docopt(),
+    )
     work = Workspace.from_cwd()
 
     # Add usage text for each collector to the docstring.
@@ -153,6 +156,23 @@ def ls():
     for path in work.iter_data(args['<substr>']):
         print(path.relative_to(work.data_dir))
 
+
+def format_collectors_for_docopt():
+    from textwrap import indent
+    from ..collectors import get_collectors
+
+    collectors = get_collectors()
+    collectors = sorted(collectors.values(), key=lambda x: x.name)
+
+    usage = ""
+
+    for last, collector in utils.last(collectors):
+        docstring = cli.get_docstring(collector)
+        usage += f"'{collector.name}'" + '\n'
+        usage += indent(docstring, '    ')
+        if not last: usage += '\n\n'
+
+    return usage
 
 class FileAlreadyExists(Exception):
     show_message_and_die = True
