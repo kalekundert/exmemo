@@ -11,7 +11,9 @@ setup(
     version='0.0.0',
     author='Kale Kundert',
     author_email='kale@thekunderts.net',
+    url='https://github.com/kalekundert/exmemo',
     long_description=readme,
+    include_package_data=True,
     packages=[
         'exmemo',
     ],
@@ -90,7 +92,7 @@ setup(
     classifiers=[
             'Topic :: Scientific/Engineering',
             'Intended Audience :: Science/Research',
-            'Programming Language :: Python :: 3 :: Only',
+            'Programming Language :: Python :: 3.6',
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
             'Development Status :: 2 - Pre-Alpha',
     ],

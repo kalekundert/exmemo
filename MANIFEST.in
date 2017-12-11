@@ -1,10 +1,8 @@
 include LICENSE.txt
 include README.rst
 include exmemo/sphinx/favicon.ico
-
 recursive-include exmemo/cookiecutter *
-recursive-include tests *
-recursive-include docs *.rst conf.py Makefile
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude * .*.sw?
 

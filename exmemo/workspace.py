@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import collections
 from subprocess import DEVNULL
+from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
 from pprint import pprint
@@ -174,10 +175,10 @@ class Workspace:
 
     def init_project(self, title):
         from cookiecutter.main import cookiecutter
+        from .cookiecutter import cookiecutter_path
         from click.exceptions import Abort
 
-        url = self.config.get('cookiecutter_url') or \
-                Path(__file__).parent / 'cookiecutter'
+        url = self.config.get('cookiecutter_url') or cookiecutter_path
 
         try:
             cookiecutter(str(url), extra_context={

@@ -84,7 +84,7 @@ html_theme_path = [get_html_theme_path()]
 
 # Specify the favicon.
 from exmemo.sphinx import favicon_path
-html_favicon = favicon_path
+html_favicon = str(favicon_path)
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

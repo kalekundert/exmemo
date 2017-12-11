@@ -1,4 +1,4 @@
 #!/usr/bin/env python3
 
-import os
-favicon_path = os.path.join(os.path.dirname(__file__), 'favicon.ico')
+from pathlib import Path
+favicon_path = Path(__file__).parent / 'favicon.ico'
