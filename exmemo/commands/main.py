@@ -32,19 +32,19 @@ def project():
 
     cli.run_subcommand_via_docopt('exmemo.commands.project')
 
-def expt():
+def note():
     """\
     Keep notes on your day-to-day experiments.
 
     Usage:
-        exmemo expt <command> [<args>...]
-        exmemo expt (-h | --help)
-        exmemo expt --version
+        exmemo note <command> [<args>...]
+        exmemo note (-h | --help)
+        exmemo note --version
 
     Commands:
         {subcommands}
     """
-    cli.run_subcommand_via_docopt('exmemo.commands.expt')
+    cli.run_subcommand_via_docopt('exmemo.commands.note')
 
 def protocol():
     """\

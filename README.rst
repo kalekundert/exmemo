@@ -43,7 +43,7 @@ system should have any information you need::
 
 You can also get help for individual subcommands::
 
-   $ exmemo expt --help
+   $ exmemo note --help
 
 Example
 =======
@@ -80,7 +80,7 @@ The project will have the following directories:
 Let's start by creating a new entry (called an "experiment") in our lab 
 notebook::
 
-   $ exmemo expt new "Large step with half twist"
+   $ exmemo note new "Large step with half twist"
 
 This will create a subdirectory called ``20171210_large_step_with_half_twist/`` 
 in the ``notebook/`` directory.  It will also create a restructured text file 
@@ -94,7 +94,7 @@ stored together.  That's what this subdirectory is for.
 When you later want to edit the notebook entry again, you can do so from 
 anywhere in the project directory with the following command::
    
-   $ exmemo expt edit twist
+   $ exmemo note edit twist
 
 Note that you can specify the experiment by giving just part of its name.  If 
 you give a substring that matches multiple experiments, you'll be asked which 
@@ -104,11 +104,11 @@ will be opened.
 Similarly, you can launch a new terminal that's already cd'd into a particular 
 experiment directory using this command::
 
-   $ exmemo expt open twist
+   $ exmemo note open twist
 
 When you want to recompile the HTML pages for your notebook, run this command::
 
-   $ exmemo expt build
+   $ exmemo note build
 
 Now lets say that we're about to go into lab and setup a reaction.  We can 
 start by printing out a paper copy of the protocol we want to follow.  (I like 
@@ -127,7 +127,7 @@ We'd also like to make a copy of this protocol in the experiment subdirectory
 we made, so we can include the protocol in our lab notebook entry.  To do this, 
 first launch a terminal that's cd'd into the experiment subdirectory::
 
-   $ exmemo expt open twist
+   $ exmemo note open twist
 
 Then run the following command to make a copy of the protocol::
 
@@ -180,7 +180,7 @@ this keeps all the files relevant to a particular question in one place.)  To
 do this, the first step is to fire up a terminal that's cd'd into the 
 experiment subdirectory::
 
-   $ exmemo expt open twist
+   $ exmemo note open twist
 
 Then run the following command to symlink to some data::
 
@@ -225,12 +225,12 @@ Aliases
 The exmemo commands are rather verbose, which is not ideal for things you want 
 to be typing all the time.  You can make them a little shorter by only typing 
 the first few letters of each subcommand (i.e. ``exmemo ex ed`` instead of 
-``exmemo expt edit``), but it's still not ideal.  For that reason, I use the 
+``exmemo note edit``), but it's still not ideal.  For that reason, I use the 
 following set of shell aliases::
 
-   alias en='exmemo expt new'
-   alias ee='exmemo expt edit'
-   alias eo='exmemo expt open'
+   alias en='exmemo note new'
+   alias ee='exmemo note edit'
+   alias eo='exmemo note open'
    alias es='exmemo protocol show'
    alias ep='exmemo protocol print'
    alias ef='exmemo protocol save'
