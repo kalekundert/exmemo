@@ -72,7 +72,9 @@ setup(
             'ls=exmemo.commands.protocol:ls',
         ],
         'exmemo.commands.debug': [
-            'show=exmemo.commands.debug:config',
+            'config=exmemo.commands.debug:config',
+            'readers=exmemo.commands.debug:readers',
+            'collectors=exmemo.commands.debug:collectors',
         ],
         'exmemo.protocolreaders': [
             'txt=exmemo.readers:TxtReader',

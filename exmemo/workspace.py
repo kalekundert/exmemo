@@ -73,18 +73,18 @@ class Workspace:
         # resolving any symlinks in the path.
         self._root = Path(os.path.abspath(root))
 
-        config_paths = [
+        self._config_paths = [
                 Path(app.site_config_dir) / 'conf.toml',
                 Path(app.user_config_dir) / 'conf.toml',
                 self.rcfile,
         ]
-        config_paths = [
-                str(x) for x in config_paths if x.exists()
+        self._config_paths = [
+                str(x) for x in self._config_paths if x.exists()
         ]
-        if not config_paths:
+        if not self._config_paths:
             self._config = {}
         else:
-            self._config = toml.load(config_paths)
+            self._config = toml.load(self._config_paths)
 
     @property
     def root_dir(self):
@@ -93,6 +93,10 @@ class Workspace:
     @property
     def config(self):
         return self._config
+
+    @property
+    def config_paths(self):
+        return self._config_paths
 
     @property
     def rcfile(self):

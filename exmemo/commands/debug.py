@@ -25,9 +25,30 @@ def config():
     configuration options.
     """
     args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
+    work = Workspace.from_cwd(strict=False)
 
+    pprint(work.config_paths)
     pprint(work.config)
+
+def readers():
+    """\
+    Dump all of the protocol reader plugins that exmemo is aware of.
+
+    Usage:
+        exmemo debug readers
+    """
+    from ..readers import get_readers
+    pprint(get_readers())
+
+def collectors():
+    """\
+    Dump all of the data collector plugins that exmemo is aware of.
+
+    Usage:
+        exmemo debug collector
+    """
+    from ..collectors import get_collectors
+    pprint(get_collectors())
 
 
 
