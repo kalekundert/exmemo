@@ -18,16 +18,44 @@ def sync():
         -v --verbose
             Print out each command that is run to sync the data.
 
-    You can define data sources in any of your config files.  Each data source 
-    must have a type and any arguments defined by that type.  For example:
+    You have lots of control over how exmomo finds and imports data.  The basic 
+    idea is to define "data collectors" by adding [[data]] sections any of your  
+    configuration files.  Each of these sections should contain a type and any 
+    options specific to that type, e.g.:
 
         [[data]]
-        type: usb
-        src: ~/usb/gels
-        dest: gels
+        type = ...
+        this_option = ...
+        that_option = ...
 
-    This specifies that data from `~/usb/gels` should be copied into the `gels` 
-    directory within the data directory of the project using `rsync`.
+    The type specifies the algorithm that will be used to find and import files.  
+    The following types are currently installed:
+
+    {installed_collectors}
+
+    If none of these collectors can handle the data you want to sync, it's easy to 
+    write your own.  Each collector is just a class that adheres to the following 
+    interface:
+
+       class MyCollector:
+           \"\"\"
+           Description of options...
+           \"\"\"
+       
+           def __init__(self, this_option, that_option):
+              pass
+
+           def sync(self, workspace, verbose):
+              pass
+
+    The docstring is used to populate this usage document.  The arguments to the 
+    constructor define the options that the collector understands.  The sync() 
+    method does the actual work of syncing the data.  The workspace argument is an 
+    object that contains information about all the paths in the project, and the 
+    verbose argument is just a boolean indicating whether or not you should print 
+    out every command that gets run.  Once you've written a class according to this 
+    interface, register it with the 'exmemo.datacollectors' entry point via the 
+    setuptools plugin API, and it'll be available to use.
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()

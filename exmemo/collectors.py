@@ -35,8 +35,33 @@ def run(cmd, verbose=True, **kwargs):
 
 
 class RsyncCollector:
+    """
+    Copy any files that have changed from the given (and possibly remote) source 
+    to the given destination within the project data directory.  The following 
+    options are recognized:
 
-    def __init__(self, src, dest=None, cmd=None, precmd=None, postcmd=None, verbose=False):
+    src (required):
+       The file or directory to copy.  If you want to specify a directory, 
+       remember that trailing slashes are significant to rsync: 'some/dir' means 
+       copy dir itself, 'some/dir/' means copy only the files inside dir.
+       
+    dest (default: '.'):
+       Where to copy the files to, relative to the project data directory.
+       
+    cmd (default: 'rsync --archive --ignoe-existing {src} {dest}'):
+       The rsync command to execute.  {src} and {dest} will be replaced with the 
+       values of the `src` and `dest` options, respectively.  The purpose of 
+       this option is to allow you to pass rsync different flags, or even to run 
+       a different command entirely.
+
+    precmd (default: ''):
+       A shell command to execute before running rsync.
+
+    postcmd (default: ''):
+       A shell command to execute after running rsync.
+    """
+
+    def __init__(self, src, dest=None, cmd=None, precmd=None, postcmd=None):
         # Use `os.path.expanduser()` for `src` because it doesn't clobber 
         # trailing slashes, which are significant to rsync.
         self.src = os.path.expanduser(src)
@@ -44,7 +69,6 @@ class RsyncCollector:
         self.cmd = cmd or 'rsync --archive --ignore-existing {src} {dest}'
         self.precmd = precmd
         self.postcmd = postcmd
-        self.verbose = verbose
 
     def sync(self, work, verbose):
         dest = work.data_dir / self.dest
@@ -60,9 +84,43 @@ class RsyncCollector:
     
 
 class UsbCollector(RsyncCollector):
+    """
+    Copy files from a USB drive into the project.  Rsync is used to 
+    actually copy the files, so large directories can be efficiently copied 
+    and all of the options that apply to the 'rsync' collector also apply 
+    here.
+    
+    src (required):
+       The file or directory to copy.  If you want to specify a directory, 
+       remember that trailing slashes are significant to rsync: 'some/dir' 
+       means copy dir itself, 'some/dir/' means copy only the files inside 
+       dir.
+       
+    dest (default: '.'):
+       Where to copy the files to, relative to the project data directory.
 
-    def __init__(self, src, dest, mountpoint=None, rsync=None, precmd=None, postcmd=None, verbose=False):
-        super().__init__(src, dest, rsync, precmd, postcmd, verbose)
+    mountpoint (default: None):
+       The directory where the USB drive is mounted.  If this is specified, 
+       exmemo will attempt to automatically mount and unmount the USB drive 
+       if it can't otherwise locate the files.  If this option is not 
+       specified, the USB drive must be mounted before the sync command is 
+       run.
+       
+    cmd (default: 'rsync --archive --ignoe-existing {src} {dest}'):
+       The rsync command to execute.  {src} and {dest} will be replaced 
+       with the values of the `src` and `dest` options, respectively.  The 
+       purpose of this option is to allow you to pass rsync different 
+       flags, or even to run a different command entirely.
+
+    precmd (default: ''):
+       A shell command to execute before running rsync.
+
+    postcmd (default: ''):
+       A shell command to execute after running rsync.
+    """
+
+    def __init__(self, src, dest, mountpoint=None, rsync=None, precmd=None, postcmd=None):
+        super().__init__(src, dest, rsync, precmd, postcmd)
         self.mountpoint = mountpoint and Path(mountpoint).expanduser()
 
     def sync(self, work, verbose):
@@ -90,7 +148,7 @@ class UsbCollector(RsyncCollector):
 
         if os.path.exists(self.src):
             super().sync(work)
-        elif self.verbose:
+        elif verbose:
             print(f"Can't find {self.src}.")
 
         if umount_when_done:
@@ -126,3 +184,7 @@ Unknown data collector '{type}'.  Did you mean:
 {did_you_mean}"""
 
 
+
+# Make the collector docstrings line up right when they're indented and 
+# included in a usage string.
+# vim: tw=75
