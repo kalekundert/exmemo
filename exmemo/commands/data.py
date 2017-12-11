@@ -43,10 +43,10 @@ def link():
     Make a symbolic link to the indicated data file.
 
     Usage:
-        exmemo [data] link <slug> [<dir>]
+        exmemo [data] link <substr> [<dir>]
 
     Arguments
-        <slug>
+        <substr>
             A string specifying the data file to link.  You can provide any 
             substring from the name of the data file.  If the substring is not 
             unique, you'll be asked which file you meant.
@@ -62,7 +62,7 @@ def link():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    data = work.pick_data(args['<slug>'])
+    data = work.pick_data(args['<substr>'])
     link = Path(args['<dir>'] or '.') / data.name
 
     link.symlink_to(data)
@@ -74,10 +74,10 @@ def gel():
     you a chance to crop it.
 
     Usage:
-        exmemo data gel <slug> [<dir>] [-f]
+        exmemo data gel <substr> [<dir>] [-f]
 
     Arguments:
-        <slug>
+        <substr>
             A string specifying the data file to copy and crop.  You can 
             provide any substring from the name of the data file.  If the 
             substring is not unique, you'll be asked which file you meant.
@@ -96,7 +96,7 @@ def gel():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    data = work.pick_data(args['<slug>'])
+    data = work.pick_data(args['<substr>'])
     copy = Path(args['<dir>'] or '.') / f'{data.stem}.png'
 
     if copy.exists() and not args['--force']:
@@ -113,16 +113,16 @@ def ls():
     List data files.
 
     Usage:
-        exmemo data ls [<slug>]
+        exmemo data ls [<substr>]
 
     Arguments:
-        <slug>
+        <substr>
             Only list files that contain the given substring.
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
 
-    for path in work.iter_data(args['<slug>']):
+    for path in work.iter_data(args['<substr>']):
         print(path.relative_to(work.data_dir))
 
 

@@ -96,10 +96,10 @@ anywhere in the project directory with the following command::
    
    $ exmemo expt edit twist
 
-Note that the experiment is specified by a "slug", in this case "twist".  The 
-slug can be any part of the actual experiment name.  If you give a slug that 
-matches multiple experiments, you'll be asked which one you meant.  If you 
-don't specify a slug at all, the most recent experiment will be opened.
+Note that you can specify the experiment by giving just part of its name.  If 
+you give a substring that matches multiple experiments, you'll be asked which 
+one you meant.  If you don't specify an experiment at all, the most recent one 
+will be opened.
 
 Similarly, you can launch a new terminal that's already cd'd into a particular 
 experiment directory using this command::
@@ -117,11 +117,11 @@ transcribe any that are significant back into my notebook when I'm done.)::
 
    $ exmemo protocol print treadmill
 
-Again the argument to this command ("treadmill") is a slug, but this time 
-exmemo will look for matches in your ``protocols/`` directory.  You can also 
-tell exmemo to look in directories outside your project (i.e. if you have 
-protocols that are shared between projects), see ``exmemo protocols ls --help`` 
-for details).
+Again the argument to this command ("treadmill") can just be a substring, but 
+this time exmemo will look for matches in your ``protocols/`` directory.  You 
+can also tell exmemo to look in directories outside your project (i.e. if you 
+have protocols that are shared between projects), see ``exmemo protocols ls 
+--help`` for details).
 
 We'd also like to make a copy of this protocol in the experiment subdirectory 
 we made, so we can include the protocol in our lab notebook entry.  To do this, 
@@ -184,13 +184,13 @@ experiment subdirectory::
 
 Then run the following command to symlink to some data::
 
-   $ exmemo data link <slug>
+   $ exmemo data link <substr>
 
-Again, you specify which file you're interested in using a slug.  Exmemo will 
-search the ``data/`` directory looking for matching files, and will ask you if 
-there's any ambiguity.  You can include images in your restructured text files 
-using the ``.. figure::`` directive, and any other type of data can be included 
-using the ``:download:`` role.
+Again, you can specify which file you're interested in using just a substring.  
+Exmemo will search the ``data/`` directory looking for matching files, and will 
+ask you if there's any ambiguity.  You can include images in your restructured 
+text files using the ``.. figure::`` directive, and any other type of data can 
+be included using the ``:download:`` role.
 
 Why initially copy the data into the ``data/`` directory, just to symlink it 
 into an experiment subdirectory later?  There are a couple reasons.  First, 

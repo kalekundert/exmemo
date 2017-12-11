@@ -29,13 +29,13 @@ def edit():
     Open the notebook entry for the given experiment in a text editor.
 
     Usage:
-        exmemo [expt] edit [<slug>]
+        exmemo [expt] edit [<substr>]
 
     Arguments:
-        <slug>
+        <substr>
             The experiment to edit.  You don't need to specify the whole name, 
             just enough to be unique.  If multiple experiments match the given 
-            slug, you'll will be asked which one you mean.  If you don't 
+            substr, you'll will be asked which one you mean.  If you don't 
             specify an experiment, the most recently created one will be used.
 
     You can specify which text editor you prefer in an `.exmemorc` file, or via 
@@ -43,7 +43,7 @@ def edit():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    expt = work.pick_experiment(args['<slug>'])
+    expt = work.pick_experiment(args['<substr>'])
     path = work.get_notebook_entry(expt)
 
     work.launch_editor(path)
@@ -54,13 +54,13 @@ def open():
     Open a new terminal cd'd into the given experiment.
 
     Usage:
-        exmemo [expt] open [<slug>]
+        exmemo [expt] open [<substr>]
 
     Arguments:
-        <slug>
+        <substr>
             The experiment to open.  You don't need to specify the whole name, 
             just enough to be unique.  If multiple experiments match the given 
-            slug, you'll will be asked which one you mean.  If you don't 
+            substr, you'll will be asked which one you mean.  If you don't 
             specify an experiment, the most recently created one will be used.
 
     You can specify which terminal you prefer in an `.exmemorc` file, or via 
@@ -68,7 +68,7 @@ def open():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    expt = work.pick_experiment(args['<slug>'])
+    expt = work.pick_experiment(args['<substr>'])
 
     work.launch_terminal(expt)
 
@@ -96,15 +96,15 @@ def ls():
     Print the names of any existing experiments.
 
     Usage:
-        exmemo expt ls [<slug>]
+        exmemo expt ls [<substr>]
 
     Arguments:
-        <slug>
+        <substr>
             Only print the experiments matching the given text.
     """
     args = cli.parse_args_via_docopt()
     workspace = Workspace.from_cwd()
 
-    for expt in workspace.iter_experiments(args['<slug>']):
+    for expt in workspace.iter_experiments(args['<substr>']):
         print(expt.name)
 

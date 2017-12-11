@@ -128,21 +128,21 @@ class Workspace:
         shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
         return [x for x in local_dirs + shared_dirs if x.exists()]
 
-    def iter_data(self, slug=None):
-        return iter_paths_matching_slug(self.data_dir, slug)
+    def iter_data(self, substr=None):
+        return iter_paths_matching_substr(self.data_dir, substr)
     
-    def iter_experiments(self, slug=None):
-        yield from (x.parent for x in iter_paths_matching_slug(
-            self.notebook_dir, slug, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
+    def iter_experiments(self, substr=None):
+        yield from (x.parent for x in iter_paths_matching_substr(
+            self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
 
-    def iter_protocols(self, slug=None):
+    def iter_protocols(self, substr=None):
         for dir in self.protocols_dirs:
-            yield from iter_paths_matching_slug(dir, slug)
+            yield from iter_paths_matching_substr(dir, substr)
 
-    def iter_protocols_from_dir(self, dir, slug=None):
-        yield from iter_paths_matching_slug(dir, slug)
+    def iter_protocols_from_dir(self, dir, substr=None):
+        yield from iter_paths_matching_substr(dir, substr)
 
-    def pick_path(self, slug, choices, no_choices=None):
+    def pick_path(self, substr, choices, no_choices=None):
         choices = list(choices)
 
         if len(choices) == 0:
@@ -151,7 +151,7 @@ class Workspace:
         if len(choices) == 1:
             return choices[0]
 
-        if slug is None:
+        if substr is None:
             return choices[-1]  # The most recently created.
 
         # Once I've written the config-file system, there should be an option 
@@ -159,14 +159,14 @@ class Workspace:
         i = utils.pick_one(x.name for x in choices)
         return choices[i]
 
-    def pick_data(self, slug):
-        return self.pick_path(slug, self.iter_data(slug))
+    def pick_data(self, substr):
+        return self.pick_path(substr, self.iter_data(substr))
 
-    def pick_experiment(self, slug):
-        return self.pick_path(slug, self.iter_experiments(slug))
+    def pick_experiment(self, substr):
+        return self.pick_path(substr, self.iter_experiments(substr))
 
-    def pick_protocol(self, slug):
-        return self.pick_path(slug, self.iter_protocols(slug))
+    def pick_protocol(self, substr):
+        return self.pick_path(substr, self.iter_protocols(substr))
 
     def pick_protocol_reader(self, path, args):
         path = Path(path)
@@ -257,13 +257,13 @@ def slug_from_title(title):
 
     return title.translate(Sanitizer())
 
-def iter_paths_matching_slug(dir, slug=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
-    slug = '*' if slug is None else f'*{slug}*'
+def iter_paths_matching_substr(dir, substr=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
+    substr = '*' if substr is None else f'*{substr}*'
 
     if glob is None:
-        include = [f'**/{slug}', f'**/{slug}/**']  # Match files and dirs.
+        include = [f'**/{substr}', f'**/{substr}/**']  # Match files and dirs.
     else:
-        include = glob.format(slug)
+        include = glob.format(substr)
 
     matches = sorted(
             Path(x) for x in formic.FileSet(

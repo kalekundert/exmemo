@@ -11,10 +11,10 @@ def show():
     Display the given protocol.
 
     Usage:
-        exmemo [protocol] show <slug> [<args>...]
+        exmemo [protocol] show <substr> [<args>...]
 
     Arguments:
-        <slug>
+        <substr>
             A string specifying the protocol to show.  You can provide any 
             substring from the name of the protocol.  If the substring is not 
             unique, you'll be asked which file you meant.
@@ -34,7 +34,7 @@ def show():
     argv = pop_protocol_args('show')
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd(strict=False)
-    protocol = work.pick_protocol(args['<slug>'])
+    protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
 
     reader.show(work)
@@ -45,10 +45,10 @@ def printer():
     Print the given protocol.
 
     Usage:
-        exmemo [protocol] print <slug>
+        exmemo [protocol] print <substr>
 
     Arguments:
-        <slug>
+        <substr>
             A string specifying the protocol to print.  You can provide any 
             substring from the name of the protocol.  If the substring is not 
             unique, you'll be asked which file you meant.
@@ -64,7 +64,7 @@ def printer():
     argv = pop_protocol_args('print')
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd(strict=False)
-    protocol = work.pick_protocol(args['<slug>'])
+    protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
 
     reader.print(work)
@@ -76,10 +76,10 @@ def save():
     lab notebook.
 
     Usage:
-        exmemo [protocol] save <slug> [<dir>]
+        exmemo [protocol] save <substr> [<dir>]
 
     Arguments:
-        <slug>
+        <substr>
             A string specifying the protocol to date-stamp and save.  You can 
             provide any substring from the name of the protocol.  If the 
             substring is not unique, you'll be asked which file you meant.
@@ -99,7 +99,7 @@ def save():
     argv = pop_protocol_args('save')
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd(strict=False)
-    protocol = work.pick_protocol(args['<slug>'])
+    protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
 
     reader.save(work, args['<dir>'])
@@ -109,10 +109,10 @@ def edit():
     Edit the given protocol.
 
     Usage:
-        exmemo protocol edit <slug>
+        exmemo protocol edit <substr>
 
     Arguments:
-        <slug>
+        <substr>
             A string specifying the protocol to show.  You can provide any 
             substring from the name of the protocol.  If the substring is not 
             unique, you'll be asked which file you meant.
@@ -127,7 +127,7 @@ def edit():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd(strict=False)
-    protocol = work.pick_protocol(args['<slug>'])
+    protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, [])
 
     reader.edit(work)
@@ -137,10 +137,10 @@ def ls():
     List protocols.
 
     Usage:
-        exmemo protocol ls [<slug>]
+        exmemo protocol ls [<substr>]
 
     Arguments:
-        <slug>
+        <substr>
             Only list files that contain the given substring.
 
     Exmemo looks for protocols both inside and outside of the project.  Inside 
@@ -156,7 +156,7 @@ def ls():
 
     for last, dir in utils.last(work.protocols_dirs):
         print(dir)
-        for path in work.iter_protocols_from_dir(dir, args['<slug>']):
+        for path in work.iter_protocols_from_dir(dir, args['<substr>']):
             print(' ', path.relative_to(dir))
         if not last:
             print()
