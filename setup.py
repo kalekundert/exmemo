@@ -16,6 +16,9 @@ setup(
     include_package_data=True,
     packages=[
         'exmemo',
+        'exmemo.commands',
+        'exmemo.cookiecutter',
+        'exmemo.sphinx',
     ],
     install_requires=[
         'appdirs',
