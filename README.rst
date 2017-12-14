@@ -147,7 +147,7 @@ the existing ones.
 
 Note that there isn't a command to create a new protocol.  Protocols are just 
 regular files in the ``protocols/`` directory, so just create them however you 
-would normally create a file.
+would normally `create files <https://xkcd.com/378/>`_.
 
 Protocol in hand, we do our experiment and get some data.  Let's say this data 
 is on our USB drive.  Exmemo has a command to automatically sync data from 
@@ -220,10 +220,11 @@ to give free private repositories to academic researchers).
 Aliases
 =======
 The exmemo commands are rather verbose, which is not ideal for things you want 
-to be typing all the time.  You can make them a little shorter by only typing 
-the first few letters of each subcommand (i.e. ``exmemo ex ed`` instead of 
-``exmemo note edit``), but it's still not ideal.  For that reason, I use the 
-following set of shell aliases::
+to be typing all the time.  There are shortcuts for some of the most common 
+commands (e.g. ``exmemo edit`` instead of ``exmemo note edit``) and you can 
+make any command a little shorter by only typing the first few letters of each 
+subcommand (i.e.  ``exmemo ed`` instead of ``exmemo edit``), but it's still not 
+ideal.  For that reason, I use the following set of shell aliases::
 
    alias en='exmemo note new'
    alias ee='exmemo note edit'
