@@ -147,13 +147,14 @@ class Workspace:
         choices = list(choices)
 
         if len(choices) == 0:
-            raise no_choices or ValueError("No choices to pick from")
+            raise no_choices or CantMatchSubstr('choices', substr)
 
         if len(choices) == 1:
             return choices[0]
 
         if substr is None:
-            return choices[-1]  # The most recently created.
+            return choices[-1]  # The most recently created, if the choices
+                                # are sorted and prefixed by date.
 
         # Once I've written the config-file system, there should be an option 
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
@@ -161,13 +162,22 @@ class Workspace:
         return choices[i]
 
     def pick_data(self, substr):
-        return self.pick_path(substr, self.iter_data(substr))
+        return self.pick_path(
+                substr, self.iter_data(substr),
+                no_choices=CantMatchSubstr('data files', substr),
+        )
 
     def pick_experiment(self, substr):
-        return self.pick_path(substr, self.iter_experiments(substr))
+        return self.pick_path(
+                substr, self.iter_experiments(substr),
+                no_choices=CantMatchSubstr('experiments', substr),
+        )
 
     def pick_protocol(self, substr):
-        return self.pick_path(substr, self.iter_protocols(substr))
+        return self.pick_path(
+                substr, self.iter_protocols(substr),
+                no_choices=CantMatchSubstr('protocols', substr),
+        )
 
     def pick_protocol_reader(self, path, args):
         path = Path(path)
@@ -246,6 +256,13 @@ class WorkspaceNotFound(IOError):
         self.message = f"'{dir}' is not a workspace."
 
 
+class CantMatchSubstr(Exception):
+    show_message_and_die = True
+
+    def __init__(self, type, substr):
+        self.message = f"No {type} matching '{substr}'."
+
+
 
 def slug_from_title(title):
 
@@ -260,6 +277,7 @@ def slug_from_title(title):
 
 def iter_paths_matching_substr(dir, substr=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
     substr = '*' if substr is None else f'*{substr}*'
+    substr = substr.replace('/', '*/**/*')
 
     if glob is None:
         include = [f'**/{substr}', f'**/{substr}/**']  # Match files and dirs.
