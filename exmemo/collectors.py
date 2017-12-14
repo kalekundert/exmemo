@@ -67,8 +67,8 @@ class RsyncCollector:
         self.src = os.path.expanduser(src)
         self.dest = Path(dest or '').expanduser()
         self.cmd = cmd or 'rsync --archive --ignore-existing {src} {dest}'
-        self.precmd = precmd
-        self.postcmd = postcmd
+        self.precmd = precmd or ''
+        self.postcmd = postcmd or ''
 
     def sync(self, work, verbose):
         dest = work.data_dir / self.dest
@@ -146,7 +146,7 @@ class UsbCollector(RsyncCollector):
                 umount_when_done = (err == 0)
 
         if os.path.exists(self.src):
-            super().sync(work)
+            super().sync(work, verbose)
         elif verbose:
             print(f"Can't find {self.src}.")
 
