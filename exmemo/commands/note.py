@@ -91,6 +91,34 @@ def build():
 
     work.build_notebook(args['--force'])
 
+@cli.priority(30)
+def browse():
+    """
+    Open the rendered lab notebook in a web browser.
+
+    Usage:
+        exmemo [note] browse [-w]
+
+    Options:
+        -w --new-window
+            Open a new window in the browser.  The default is to just open a 
+            new tab in whichever browser window you most recently used.
+
+    The default browser is firefox, but you can change this by setting either 
+    the `browser` configuration option or the `$BROWSER` environment variable.  
+    If you plan to use the `-w` option with this command, you may also need to 
+    specify the command-line switch used to get the browser to create a new 
+    window.  The default is `--new-window`.  That works for both firefox and 
+    chrome, but I don't know about other browsers.  You can change it by 
+    setting either the `browser_new_window_flag` configuration option or the 
+    `$BROWSER_NEW_WINDOW_FLAG` environment variable.
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+    url = work.notebook_dir / 'build' / 'html' / 'index.html'
+    
+    work.launch_browser(url, args['--new-window'])
+
 def ls():
     """\
     Print the names of any existing experiments.

@@ -45,6 +45,7 @@ setup(
             'edit=exmemo.commands.note:edit',
             'open=exmemo.commands.note:open',
             'build=exmemo.commands.note:build',
+            'browse=exmemo.commands.note:browse',
             'show=exmemo.commands.protocol:show',
             'print=exmemo.commands.protocol:printer',
             'save=exmemo.commands.protocol:save',
@@ -65,6 +66,7 @@ setup(
             'edit=exmemo.commands.note:edit',
             'open=exmemo.commands.note:open',
             'build=exmemo.commands.note:build',
+            'browse=exmemo.commands.note:browse',
             'ls=exmemo.commands.note:ls',
         ],
         'exmemo.commands.data': [

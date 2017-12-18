@@ -228,6 +228,17 @@ class Workspace:
         cmd = *shlex.split(pdf), path
         subprocess.Popen(cmd)
 
+    def launch_browser(self, url, new_window=False):
+        browser = self.config.get('browser', os.environ.get('BROWSER')) or 'firefox'
+        new_window_flag = self.config.get('browser_new_window_flag', os.environ.get('BROWSER_NEW_WINDOW_FLAG')) or '--new-window'
+
+        if new_window:
+            cmd = *shlex.split(browser), new_window_flag, url
+        else:
+            cmd = *shelx.split(browser), url
+
+        subprocess.Popen(cmd)
+
     def sync_data(self, verbose):
         from . import collectors
         collectors.sync_data(self, verbose)
