@@ -235,7 +235,7 @@ class Workspace:
         if new_window:
             cmd = *shlex.split(browser), new_window_flag, url
         else:
-            cmd = *shelx.split(browser), url
+            cmd = *shlex.split(browser), url
 
         subprocess.Popen(cmd)
 
