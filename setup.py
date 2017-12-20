@@ -55,6 +55,7 @@ setup(
             'note=exmemo.commands.main:note',
             'protocol=exmemo.commands.main:protocol',
             'data=exmemo.commands.main:data',
+            'config=exmemo.commands.main:config',
             'debug=exmemo.commands.main:debug',
         ],
         'exmemo.commands.project': [
@@ -82,6 +83,11 @@ setup(
             'save=exmemo.commands.protocol:save',
             'plugins=exmemo.commands.protocol:plugins',
             'ls=exmemo.commands.protocol:ls',
+        ],
+        'exmemo.commands.config': [
+            'get=exmemo.commands.config:get',
+            'set=exmemo.commands.config:set',
+            'edit=exmemo.commands.config:edit',
         ],
         'exmemo.commands.debug': [
             'config=exmemo.commands.debug:config',

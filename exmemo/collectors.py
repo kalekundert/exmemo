@@ -36,12 +36,12 @@ def run(cmd, verbose=True, **kwargs):
 
 class RsyncCollector:
     """
-    Copy any files that have changed from the given (and possibly remote) source 
-    to the given destination within the project data directory.  The following 
-    options are recognized:
+    Copy any files that have changed from the given (and possibly remote) 
+    source to the given destination within the project data directory.  The 
+    following options are recognized:
 
     src (required):
-        The file or directory to copy.  If you want to specify a directory, 
+        The file or directory to copy, relative to the project data directory.  If you want to specify a directory, 
         remember that trailing slashes are significant to rsync: 'dir' 
         means copy dir itself, 'dir/' means copy only the files inside dir.
        

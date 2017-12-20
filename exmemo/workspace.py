@@ -26,35 +26,18 @@ class Workspace:
         characteristic set of files and directories.
         """
 
-        def looks_like_workspace(dir):
-            nonlocal workspace
-            workspace = Workspace(dir)
-
-            if not workspace.rcfile.exists():
-                return False
-            if not workspace.analysis_dir.exists():
-                return False
-            if not workspace.data_dir.exists():
-                return False
-            if not workspace.documents_dir.exists():
-                return False
-            if not workspace.notebook_dir.exists():
-                return False
-            if not workspace.protocols_dir.exists():
-                return False
-
-            return True
-
         dir = given_dir = Path(dir)
-        workspace = None
+        work = given_work = Workspace(dir)
 
-        while not looks_like_workspace(dir):
+        while not work.has_project_files:
             dir = dir.parent
             if dir == Path('/'):
                 if strict: raise WorkspaceNotFound(given_dir)
-                else: return Workspace(given_dir)
+                else: return given_work
+            else:
+                work = Workspace(dir)
 
-        return workspace
+        return work
 
     @classmethod
     def from_cwd(cls, strict=True):
@@ -74,18 +57,10 @@ class Workspace:
         # resolving any symlinks in the path.
         self._root = Path(os.path.abspath(root))
 
-        self._config_paths = [
-                Path(app.site_config_dir) / 'conf.toml',
-                Path(app.user_config_dir) / 'conf.toml',
-                self.rcfile,
-        ]
-        self._config_paths = [
-                str(x) for x in self._config_paths if x.exists()
-        ]
-        if not self._config_paths:
+        if not self.config_paths:
             self._config = {}
         else:
-            self._config = toml.load(self._config_paths)
+            self._config = toml.load([str(x) for x in self.config_paths])
 
     @property
     def root_dir(self):
@@ -97,11 +72,22 @@ class Workspace:
 
     @property
     def config_paths(self):
-        return self._config_paths
+        paths = [self.site_config_path, self.user_config_path, self.rcfile]
+        return [x for x in paths if x.exists()]
 
     @property
-    def rcfile(self):
+    def site_config_path(self):
+        return Path(app.site_config_dir) / 'conf.toml'
+
+    @property
+    def user_config_path(self):
+        return Path(app.user_config_dir) / 'conf.toml'
+
+    @property
+    def project_config_path(self):
         return self.root_dir / '.exmemorc'
+
+    rcfile = project_config_path
 
     @property
     def analysis_dir(self):
@@ -128,6 +114,22 @@ class Workspace:
         local_dirs = [self.protocols_dir]
         shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
         return [x for x in local_dirs + shared_dirs if x.exists()]
+
+    @property
+    def has_project_files(self):
+        if not self.rcfile.exists():
+            return False
+        if not self.analysis_dir.exists():
+            return False
+        if not self.data_dir.exists():
+            return False
+        if not self.documents_dir.exists():
+            return False
+        if not self.notebook_dir.exists():
+            return False
+        if not self.protocols_dir.exists():
+            return False
+        return True
 
     def iter_data(self, substr=None):
         return iter_paths_matching_substr(self.data_dir, substr)
