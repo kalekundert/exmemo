@@ -61,6 +61,27 @@ def parse_args_via_docopt(**format_args):
     doc = get_caller_docstring()
     return docopt.docopt(doc.format(**format_args))
 
+def handle_docopt_help_with_pager(help, version, options, doc):
+    """
+    Monkey-patched version of `docopt.extras` that uses a pager (less) if the 
+    help text is too big to fit on the screen.
+    """
+    from shutil import get_terminal_size
+    from subprocess import run
+
+    if help and any((o.name in ('-h', '--help')) and o.value for o in options):
+        doc = doc.strip('\n')
+        w, h = get_terminal_size()
+        if doc.count('\n') > h: run('less', input=doc, encoding='utf8')
+        else: print(doc)
+        sys.exit()
+
+    if version and any(o.name == '--version' and o.value for o in options):
+        print(version)
+        sys.exit()
+
+docopt.extras = handle_docopt_help_with_pager
+
 
 def get_subcommands(group):
     return get_plugins(group)
