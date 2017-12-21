@@ -73,6 +73,39 @@ def open():
     work.launch_terminal(expt)
 
 @cli.priority(30)
+def directory():
+    """\
+    Print the path to the given experiment from the current working directory.  
+    This is often used to create an alias that cd's into the given experiment.
+
+    Usage:
+        exmemo note directory [<substr>]
+
+    Arguments:
+        <substr>
+            The experiment you're interested in.  You don't need to specify the 
+            whole name, just enough to be unique.  If multiple experiments 
+            match the given substr, you'll will be asked which one you mean.  
+            If you don't specify an experiment, the most recently created one 
+            will be implied.
+
+    Programs are not allowed to change the state of the shell (i.e. to move you 
+    into a different directory), so if you want a command that automatically 
+    cd's into a given experiment, you need to write your own shell function.  
+    This is how such a function would look in bash:
+
+        function ed () {
+            cd $(exmemo note directory "$@")
+        }
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+    expt = work.pick_experiment(args['<substr>'])
+    cwd = Workspace.get_cwd()
+
+    print(expt.relative_to(cwd))
+
+@cli.priority(30)
 def build():
     """\
     Render the lab notebook to HTML using Sphinx.

@@ -66,6 +66,7 @@ setup(
             'new=exmemo.commands.note:new',
             'edit=exmemo.commands.note:edit',
             'open=exmemo.commands.note:open',
+            'directory=exmemo.commands.note:directory',
             'build=exmemo.commands.note:build',
             'browse=exmemo.commands.note:browse',
             'ls=exmemo.commands.note:ls',

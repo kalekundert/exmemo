@@ -47,9 +47,20 @@ class Workspace:
         hierarchy looking for the root of the project, which should contain a 
         characteristic set of files and directories.
         """
-        # Use `os.getenv('PWD')` to avoid resolving symlinks, if possible.  
-        # This helps keep any paths that get outputted looking nice.
-        return cls.from_dir(os.getenv('PWD', os.getcwd()), strict)
+        return cls.from_dir(cls.get_cwd(), strict)
+
+    @staticmethod
+    def get_cwd():
+        """
+        Return the current working directory, making an effort to keep the path 
+        nice and short by not resolving symlinks.
+        """
+        # Most shells will set `$PWD` with the path the user sees the current 
+        # working directory as, taking into account whichever symlinks they 
+        # used to get there.  So this is the path we want to use, if it's 
+        # available.  If it's not, fall back on `os.getcwd()`, which will give 
+        # us the current working directory without any symlinks.
+        return Path(os.getenv('PWD', os.getcwd()))
 
 
     def __init__(self, root):

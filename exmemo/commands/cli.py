@@ -59,7 +59,9 @@ def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>', 
 
 def parse_args_via_docopt(**format_args):
     doc = get_caller_docstring()
-    return docopt.docopt(doc.format(**format_args))
+    if format_args:
+        doc = doc.format(**format_args)
+    return docopt.docopt(doc)
 
 def handle_docopt_help_with_pager(help, version, options, doc):
     """
