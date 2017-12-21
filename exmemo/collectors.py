@@ -41,9 +41,10 @@ class RsyncCollector:
     following options are recognized:
 
     src (required):
-        The file or directory to copy, relative to the project data directory.  If you want to specify a directory, 
-        remember that trailing slashes are significant to rsync: 'dir' 
-        means copy dir itself, 'dir/' means copy only the files inside dir.
+        The file or directory to copy, relative to the project data 
+        directory.  If you want to specify a directory, remember that 
+        trailing slashes are significant to rsync: 'dir' means copy dir 
+        itself, 'dir/' means copy only the files inside dir.
        
     dest (default: '.'):
         Where to copy the files to, relative to the project data directory.

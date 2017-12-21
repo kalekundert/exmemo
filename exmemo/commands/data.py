@@ -28,14 +28,14 @@ def sync():
         this_option = ...
         that_option = ...
 
-    The type specifies the algorithm that will be used to find and import files.  
-    The following types of data collectors are currently installed:
+    The type specifies the algorithm that will be used to find and import 
+    files.  The following types of data collectors are currently installed:
 
     {installed_collectors}
 
-    If none of these collectors can handle the data you want to sync, it's easy to 
-    write your own.  Each collector is just a class that adheres to the following 
-    interface:
+    If none of these collectors can handle the data you want to sync, it's easy 
+    to write your own.  Each collector is just a class that adheres to the 
+    following interface:
 
        {cls} MyCollector:
            \"\"\"
@@ -48,14 +48,15 @@ def sync():
            def sync(self, workspace, verbose):
               pass
 
-    The docstring is used to populate this usage document.  The arguments to the 
-    constructor define the options that the collector understands.  The sync() 
-    method does the actual work of syncing the data.  The workspace argument is an 
-    object that contains information about all the paths in the project, and the 
-    verbose argument is just a boolean indicating whether or not you should print 
-    out every command that gets run.  Once you've written a class according to this 
-    interface, register it with the 'exmemo.datacollectors' entry point via the 
-    setuptools plugin API, and it'll be available to use.
+    The docstring is used to populate this usage document.  The arguments to 
+    the constructor define the options that the collector understands.  The 
+    sync() method does the actual work of syncing the data.  The workspace 
+    argument is an object that contains information about all the paths in the 
+    project, and the verbose argument is just a boolean indicating whether or 
+    not you should print out every command that gets run.  Once you've written 
+    a class that implements this interface, you can register it with the 
+    'exmemo.datacollectors' entry point via the setuptools plugin API to make 
+    it available for use.
     """
     args = cli.parse_args_via_docopt(
             cls='class',
