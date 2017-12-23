@@ -75,8 +75,8 @@ def open():
 @cli.priority(30)
 def directory():
     """\
-    Print the path to the given experiment from the current working directory.  
-    This is often used to create an alias that cd's into the given experiment.
+    Print the path to the given experiment.  This is often used to create an 
+    alias that cd's into the given experiment.
 
     Usage:
         exmemo note directory [<substr>]
@@ -95,15 +95,16 @@ def directory():
     This is how such a function would look in bash:
 
         function ed () {
-            cd $(exmemo note directory "$@")
+            d=$(exmemo note directory "$@")
+            # Don't try to cd if something goes wrong.
+            [ $? = 0 ] && cd $d || echo $d
         }
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
     expt = work.pick_experiment(args['<substr>'])
-    cwd = Workspace.get_cwd()
 
-    print(expt.relative_to(cwd))
+    print(expt.resolve())
 
 @cli.priority(30)
 def build():

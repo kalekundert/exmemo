@@ -11,6 +11,11 @@ def last(iterable):
     )
 
 def pick_one(choices):
+    # Print everything to sys.stderr, because stdout is often redirected.
+    import sys, functools, builtins
+    print = functools.partial(builtins.print, file=sys.stderr)
+    input = lambda: print(end='> ') or builtins.input()
+
     print("Did you mean?")
     for i, value in enumerate(choices, 1):
         print(f"({i}) {value}")
@@ -32,11 +37,10 @@ def pick_one(choices):
 
         return True
 
-    prompt = '> '
-    choice = input(prompt)
+    choice = input()
     
     while not is_input_ok(choice):
         print(f"Please enter a number between 1 and {num_choices}.")
-        choice = input(prompt)
+        choice = input()
 
     return int(choice) - 1
