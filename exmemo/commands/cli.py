@@ -143,11 +143,11 @@ def main(func):
         try:
             func(*args, **kwargs)
         except (KeyboardInterrupt, EOFError):
-            sys.exit()
+            sys.exit(1)
         except Exception as e:
             if hasattr(e, 'show_message_and_die'):
                 print(e.message)
-                sys.exit()
+                sys.exit(2)
             else:
                 raise
 
