@@ -156,18 +156,29 @@ class Workspace:
     def iter_protocols_from_dir(self, dir, substr=None):
         yield from iter_paths_matching_substr(dir, substr)
 
-    def pick_path(self, substr, choices, no_choices=None):
-        choices = list(choices)
+    def pick_path(self, substr, paths, default=None, no_choices=None):
+        paths = list(paths)
 
-        if len(choices) == 0:
+        if len(paths) == 0:
             raise no_choices or CantMatchSubstr('choices', substr)
 
-        if len(choices) == 1:
-            return choices[0]
+        if len(paths) == 1:
+            return paths[0]
 
         if substr is None:
-            return choices[-1]  # The most recently created, if the choices
-                                # are sorted and prefixed by date.
+            # If the user provided a default, return it.
+            if default is not None:
+                return default
+
+            # If the current working directory is one of the paths, return it.
+            cwd = self.get_cwd()
+            resolved_paths = [x.resolve() for x in paths]
+            if cwd.resolve() in resolved_paths:
+                return cwd
+
+            # Otherwise just return the last path, which will be the most 
+            # recent if the paths are prefixed by date and sorted.
+            return paths[-1]
 
         # Once I've written the config-file system, there should be an option 
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
