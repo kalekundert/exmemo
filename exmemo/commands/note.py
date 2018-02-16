@@ -150,7 +150,7 @@ def browse():
     work = Workspace.from_cwd()
     url = work.notebook_dir / 'build' / 'html' / 'index.html'
     
-    work.launch_browser(url, args['--new-window'])
+    work.launch_browser(f'file://{url}', args['--new-window'])
 
 def ls():
     """\

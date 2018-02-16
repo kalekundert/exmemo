@@ -269,7 +269,7 @@ class Workspace:
         new_window_flag = self.config.get('browser_new_window_flag', os.environ.get('BROWSER_NEW_WINDOW_FLAG')) or '--new-window'
 
         if new_window:
-            cmd = *shlex.split(browser), new_window_flag, url
+            cmd = *shlex.split(browser), *shlex.split(new_window_flag), url
         else:
             cmd = *shlex.split(browser), url
 
