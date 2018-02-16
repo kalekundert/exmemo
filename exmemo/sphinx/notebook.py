@@ -5,8 +5,8 @@ from .. import Workspace
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.roles import XRefRole
+from pathlib import Path
 from pprint import pprint
-
 
 def add_expts_to_toc(app, docname, source):
     """
@@ -197,3 +197,6 @@ def setup(app):
 
     app.add_directive('update', UpdateDirective)
     app.add_directive('show-nodes', ShowNodesDirective)
+
+    css_path = Path(__file__).parent / 'tweaks.css'
+    app.add_stylesheet(str(css_path))

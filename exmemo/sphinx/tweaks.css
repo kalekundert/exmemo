@@ -1,0 +1,19 @@
+/* Get rid of the weird spacing in lists. */
+.rst-content .section ul li p:last-child { /* Need to be this specific to */
+    margin-bottom: 12px;                   /* override the theme's style. */
+}
+.rst-content .section ol li p:last-child {
+    margin-bottom: 12px;
+}
+.rst-content ol ul {
+    margin-bottom: 12px !important;
+}
+.rst-content ul ul {
+    margin-bottom: 12px !important;
+}
+.rst-content ol .wy-table-responsive {
+    margin-bottom: 12px;
+}
+.rst-content ul .wy-table-responsive {
+    margin-bottom: 12px;
+}
