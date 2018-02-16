@@ -149,6 +149,12 @@ class Workspace:
         yield from (x.parent for x in iter_paths_matching_substr(
             self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
 
+    def iter_notebook_entries(self, substr=None):
+        yield from (x for x in iter_paths_matching_substr(
+            self.notebook_dir, substr, '/{}.rst'))
+        yield from (x for x in iter_paths_matching_substr(
+            self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
+
     def iter_protocols(self, substr=None):
         for dir in self.protocols_dirs:
             yield from iter_paths_matching_substr(dir, substr)
@@ -182,8 +188,8 @@ class Workspace:
 
         # Once I've written the config-file system, there should be an option 
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
-        i = utils.pick_one(x.name for x in choices)
-        return choices[i]
+        i = utils.pick_one(x.name for x in paths)
+        return paths[i]
 
     def pick_data(self, substr):
         return self.pick_path(
@@ -195,6 +201,12 @@ class Workspace:
         return self.pick_path(
                 substr, self.iter_experiments(substr),
                 no_choices=CantMatchSubstr('experiments', substr),
+        )
+
+    def pick_notebook_entry(self, substr):
+        return self.pick_path(
+                substr, self.iter_notebook_entries(substr),
+                no_choices=CantMatchSubstr('notebook entries', substr),
         )
 
     def pick_protocol(self, substr):

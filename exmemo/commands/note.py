@@ -43,8 +43,7 @@ def edit():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    expt = work.pick_experiment(args['<substr>'])
-    path = work.get_notebook_entry(expt)
+    path = work.pick_notebook_entry(args['<substr>'])
 
     work.launch_editor(path)
 
