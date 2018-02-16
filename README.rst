@@ -229,12 +229,24 @@ ideal.  For that reason, I use the following set of shell aliases::
    alias en='exmemo note new'
    alias ee='exmemo note edit'
    alias eo='exmemo note open'
-   alias es='exmemo protocol show'
-   alias ep='exmemo protocol print'
-   alias ef='exmemo protocol save'
-   alias ey='exmemo data sync'
-   alias ek='exmemo data link'
-      
+   alias eb='exmemo note build'
+   alias el='exmemo note ls'
+   alias ew='exmemo note browse'
+   alias eww='exmemo note browse -w'
+   alias eps='exmemo protocol show'
+   alias epp='exmemo protocol print'
+   alias epe='exmemo protocol edit'
+   alias epl='exmemo protocol ls'
+   alias epf='exmemo protocol save'
+   alias edy='exmemo data sync'
+   alias edk='exmemo data link'
+   alias edg='exmemo data gel'
+
+   function ed () {
+       d=$(exmemo note directory "$@")
+       [ $? = 0 ] && cd $d || echo $d  # Don't try to cd if something goes wrong.
+   }
+
 Contributing
 ============
 Exmemo is a very new project.  I'm sure there are still lots of bugs and use 
