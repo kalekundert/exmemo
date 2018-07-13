@@ -141,7 +141,6 @@ class OdDirective(Table): #
 from docutils import nodes
 from docutils.parsers.rst.directives.tables import Table
 from nonstdlib import sci
-from ast import literal_eval as eval
 
 class Dilutions: #
 
