@@ -122,7 +122,7 @@ class Workspace:
 
     @property
     def protocols_dirs(self):
-        local_dirs = [self.protocols_dir]
+        local_dirs = [Path('.'), self.protocols_dir]
         shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
         return [x for x in local_dirs + shared_dirs if x.exists()]
 

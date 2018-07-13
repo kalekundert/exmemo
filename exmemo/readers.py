@@ -54,7 +54,7 @@ class TxtReader(Reader):
         wet_copy.print_protocol(self.path)
 
     def save(self, work, dir):
-        fossilize(self.path, f'{dir}/$.txt')
+        fossilize([self.path], f'{dir or "."}/$.txt')
 
 
 class ScriptReader(Reader):
