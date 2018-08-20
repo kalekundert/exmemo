@@ -12,6 +12,8 @@ from pathlib import Path
 from appdirs import AppDirs
 from pprint import pprint
 from . import readers, utils
+import platform
+import sys
 
 app = AppDirs('exmemo')
 
@@ -20,9 +22,9 @@ class Workspace:
     @classmethod
     def from_dir(cls, dir, strict=True):
         """
-        Create a workspace object containing given directory (or the current 
-        working directory, by default).  This involves descending the directory 
-        hierarchy looking for the root of the project, which should contain a 
+        Create a workspace object containing given directory (or the current
+        working directory, by default).  This involves descending the directory
+        hierarchy looking for the root of the project, which should contain a
         characteristic set of files and directories.
         """
 
@@ -42,9 +44,9 @@ class Workspace:
     @classmethod
     def from_cwd(cls, strict=True):
         """
-        Create a workspace object containing given directory (or the current 
-        working directory, by default).  This involves descending the directory 
-        hierarchy looking for the root of the project, which should contain a 
+        Create a workspace object containing given directory (or the current
+        working directory, by default).  This involves descending the directory
+        hierarchy looking for the root of the project, which should contain a
         characteristic set of files and directories.
         """
         return cls.from_dir(cls.get_cwd(), strict)
@@ -52,19 +54,18 @@ class Workspace:
     @staticmethod
     def get_cwd():
         """
-        Return the current working directory, making an effort to keep the path 
+        Return the current working directory, making an effort to keep the path
         nice and short by not resolving symlinks.
         """
-        # Most shells will set `$PWD` with the path the user sees the current 
-        # working directory as, taking into account whichever symlinks they 
-        # used to get there.  So this is the path we want to use, if it's 
-        # available.  If it's not, fall back on `os.getcwd()`, which will give 
+        # Most shells will set `$PWD` with the path the user sees the current
+        # working directory as, taking into account whichever symlinks they
+        # used to get there.  So this is the path we want to use, if it's
+        # available.  If it's not, fall back on `os.getcwd()`, which will give
         # us the current working directory without any symlinks.
         return Path(os.getenv('PWD', os.getcwd()))
 
-
     def __init__(self, root):
-        # Use `os.path.abspath()` instead of `Path.resolve()` to avoid 
+        # Use `os.path.abspath()` instead of `Path.resolve()` to avoid
         # resolving any symlinks in the path.
         self._root = Path(os.path.abspath(root))
 
@@ -144,7 +145,7 @@ class Workspace:
 
     def iter_data(self, substr=None):
         return iter_paths_matching_substr(self.data_dir, substr)
-    
+
     def iter_experiments(self, substr=None):
         yield from (x.parent for x in iter_paths_matching_substr(
             self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
@@ -182,11 +183,11 @@ class Workspace:
             if cwd.resolve() in resolved_paths:
                 return cwd
 
-            # Otherwise just return the last path, which will be the most 
+            # Otherwise just return the last path, which will be the most
             # recent if the paths are prefixed by date and sorted.
             return paths[-1]
 
-        # Once I've written the config-file system, there should be an option 
+        # Once I've written the config-file system, there should be an option
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
         i = utils.pick_one(x.name for x in paths)
         return paths[i]
@@ -237,7 +238,8 @@ class Workspace:
     def init_experiment(self, title):
         slug = slug_from_title(title)
         expt = self.notebook_dir / f'{utils.ymd()}_{slug}'
-        rst = expt / f'{slug}.rst'
+        # Use of str for Windows paths
+        rst = str(expt / f'{slug}.rst')
 
         expt.mkdir()
         with rst.open('w') as file:
@@ -246,11 +248,16 @@ class Workspace:
 {title}
 {'*' * len(title)}
 """)
-
         self.launch_editor(rst)
 
     def launch_editor(self, path):
-        editor = self.config.get('editor', os.environ.get('EDITOR')) or 'vim'
+        if os.environ.get('EDITOR') is None:
+            if platform.system() == "Windows":
+                editor = 'write.exe'
+            else:
+                editor = 'vim'
+        else:
+            editor = self.config.get('editor', os.environ.get('EDITOR'))
         cmd = *shlex.split(editor), path
         subprocess.Popen(cmd)
 
