@@ -10,7 +10,6 @@ from subprocess import DEVNULL
 from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
-from pprint import pprint
 from . import readers, utils
 
 app = AppDirs('exmemo')
@@ -122,7 +121,7 @@ class Workspace:
 
     @property
     def protocols_dirs(self):
-        local_dirs = [Path('.'), self.protocols_dir]
+        local_dirs = [Path('.').resolve(), self.protocols_dir]
         shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
         return [x for x in local_dirs + shared_dirs if x.exists()]
 
@@ -157,10 +156,15 @@ class Workspace:
 
     def iter_protocols(self, substr=None):
         for dir in self.protocols_dirs:
-            yield from iter_paths_matching_substr(dir, substr)
+            yield from iter_protocols_from_dir(dir, substr)
 
     def iter_protocols_from_dir(self, dir, substr=None):
-        yield from iter_paths_matching_substr(dir, substr)
+        from . import readers
+        include = {f'*{x}' for x in readers.get_known_extensions()}
+        exclude = [
+                f'**/{8*"[0-9]"}_*',  # Exclude date-stamped protocols.
+        ]
+        yield from iter_paths_matching_substr(dir, substr, include, exclude)
 
     def pick_path(self, substr, paths, default=None, no_choices=None):
         paths = list(paths)
@@ -322,14 +326,11 @@ def slug_from_title(title):
 
     return title.translate(Sanitizer())
 
-def iter_paths_matching_substr(dir, substr=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
+def iter_paths_matching_substr(dir, substr=None, include=None, exclude=None, symlinks=True, include_origin=False):
     substr = '*' if substr is None else f'*{substr}*'
     substr = substr.replace('/', '*/**/*')
-
-    if glob is None:
-        include = [f'**/{substr}', f'**/{substr}/**']  # Match files and dirs.
-    else:
-        include = glob.format(substr)
+    include = _parse_globs(include, substr, ['**/{}', '**/{}/**'])
+    exclude = _parse_globs(exclude, substr, '.*')
 
     matches = sorted(
             Path(x) for x in formic.FileSet(
@@ -344,5 +345,15 @@ def iter_paths_matching_substr(dir, substr=None, glob=None, exclude=['.*'], syml
         yield from ((dir, x) for x in matches)
     else:
         yield from matches
+
+def _parse_globs(globs, substr, default):
+    if globs is None:
+        globs = default
+    if isinstance(globs, str):
+        globs = [globs]
+
+    return [x.format(substr) for x in globs]
+
+
 
 
