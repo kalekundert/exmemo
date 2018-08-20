@@ -251,8 +251,6 @@ commands (e.g. ``exmemo edit`` instead of ``exmemo note edit``) and you can
 make any command a little shorter by only typing the first few letters of each
 subcommand (i.e.  ``exmemo ed`` instead of ``exmemo edit``), but it's still not
 ideal.  For that reason, I use the following set of shell aliases::
-   
- .. code:: bash
 
    alias en='exmemo note new'
    alias ee='exmemo note edit'
