@@ -7,9 +7,10 @@ import functools
 from .. import __version__, utils, get_plugins
 from pprint import pprint
 
+
 def run_subcommand(group, name, level=None):
     """
-    Run the subcommand with the given group and name.  This is cool because by 
+    Run the subcommand with the given group and name.  This is cool because by
     using `pkg_resources`, other packages can add commands to `exmemo`!
     """
     # Find all the commands that match what the user typed.
@@ -33,12 +34,13 @@ def run_subcommand(group, name, level=None):
     assert len(matching_subcommands) == 1
     subcommand = matching_subcommands[0]
 
-    # Put the full subcommand name in `sys.argv`, so the argument parser 
+    # Put the full subcommand name in `sys.argv`, so the argument parser
     # doesn't need to deal with the extra complexity of partial names.
     level = level or len(group.split('.')) - 1
     sys.argv[level] = subcommand.name
 
     subcommand()
+
 
 def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>', **format_args):
     doc = doc or get_caller_docstring()
@@ -57,15 +59,17 @@ def run_subcommand_via_docopt(group, level=None, doc=None, command='<command>', 
 
     return False
 
+
 def parse_args_via_docopt(**format_args):
     doc = get_caller_docstring()
     if format_args:
         doc = doc.format(**format_args)
     return docopt.docopt(doc)
 
+
 def handle_docopt_help_with_pager(help, version, options, doc):
     """
-    Monkey-patched version of `docopt.extras` that uses a pager (less) if the 
+    Monkey-patched version of `docopt.extras` that uses a pager (less) if the
     help text is too big to fit on the screen.
     """
     from shutil import get_terminal_size
@@ -88,6 +92,7 @@ docopt.extras = handle_docopt_help_with_pager
 def get_subcommands(group):
     return get_plugins(group)
 
+
 def get_subcommand_briefs(group):
     subcommands = get_subcommands(group)
 
@@ -107,7 +112,7 @@ def get_subcommand_briefs(group):
 
     subcommands.sort(key=lambda x: x.lineno)
     subcommands.sort(key=lambda x: x.priority, reverse=True)
-    
+
     # Format the brief descriptions
 
     sep, indent, padding = ':', 4, 1
@@ -125,16 +130,18 @@ def get_subcommand_briefs(group):
         )
 
     return briefs.strip()
-    
+
+
 def get_caller_docstring():
     import inspect
     frame_info = inspect.stack()[2]
     caller = frame_info.frame.f_globals[frame_info.function]
     return get_docstring(caller)
 
+
 def get_docstring(func):
     return textwrap.dedent(func.__doc__ or '').strip()
-    
+
 
 def main(func):
 
@@ -162,6 +169,7 @@ def brief(desc, priority=None):
         return f
     return decorator
 
+
 def priority(level):
     def decorator(f):
         f.priority = level
@@ -171,9 +179,7 @@ def priority(level):
 
 class UnknownSubcommand(Exception):
     show_message_and_die = True
-    
+
     def __init__(self, group, name, known_subcommands):
         cmd = [*group.split('.'), name]; del cmd[1]
         self.message = f"""Unknown command '{" ".join(cmd)}'."""
-
-
