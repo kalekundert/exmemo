@@ -241,7 +241,11 @@ class Workspace:
         # Use of str for Windows paths
         rst = str(expt / f'{slug}.rst')
 
-        expt.mkdir()
+        if not os.path.isdir(expt):
+            expt.mkdir()
+        else:
+            sys.exit('Experiment exists. Use exmemo [note] edit [<substr>].')
+
         with rst.open('w') as file:
             file.write(f"""\
 {'*' * len(title)}
