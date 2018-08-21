@@ -172,11 +172,14 @@ class Workspace:
 
     def iter_protocols(self, substr=None):
         for dir in self.protocols_dirs:
-            yield from iter_protocols_from_dir(dir, substr)
+            yield from self.iter_protocols_from_dir(dir, substr)
 
     def iter_protocols_from_dir(self, dir, substr=None):
         from . import readers
-        include = {f'*{x}' for x in readers.get_known_extensions()}
+        extensions = readers.get_known_extensions()
+        if substr is not None: extensions.add('')
+
+        include = ['{}' + x for x in extensions]
         exclude = [
                 f'**/{8*"[0-9]"}_*',  # Exclude date-stamped protocols.
         ]
@@ -359,7 +362,6 @@ def iter_paths_matching_substr(dir, substr=None, include=None, exclude=None, sym
                 symlinks=symlinks,
             )
     )
-
     if include_origin:
         yield from ((dir, x) for x in matches)
     else:
