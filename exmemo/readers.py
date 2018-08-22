@@ -12,6 +12,13 @@ def get_readers():
     from .plugins import get_plugins
     return get_plugins('exmemo.protocolreaders')
 
+def get_known_extensions():
+    return {
+            extension
+            for Reader in get_readers()
+            for extension in Reader.extensions
+    }
+
 def pick_reader(path, args):
     plugins = get_readers()
 

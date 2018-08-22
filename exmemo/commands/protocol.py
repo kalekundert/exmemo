@@ -5,6 +5,30 @@ from . import cli
 from .. import Workspace, readers, utils
 from pprint import pprint
 
+known_extensions = '\n    '.join(
+        ' '.join(Reader.extensions)
+        for Reader in readers.get_readers()
+)
+shared_doc = f"""\
+Exmemo looks for protocols both inside and outside of the project.  Inside the 
+project, exmemo looks in the current working directory and the `protocols/` 
+directory (and all of its subdirectories) at the root of the project.  Outside 
+the project, exmemo looks in any directory listed in the `shared_protocols` 
+configuration option.  See `exmemo config -h` for information on setting 
+configuration options.  This makes it easy to have protocols that are shared 
+between projects:
+
+    shared_protocols = ['~/research/protocols']
+
+Only protocols with a recognized file extension will be displayed.  
+Currently, the following extensions are recognized:
+    
+    {known_extensions}
+
+Post a bug report if you have protocols of a different type that you would 
+like to use with Exmemo.
+"""
+
 @cli.priority(20)
 def show():
     """\
@@ -23,16 +47,10 @@ def show():
             Any information that needs to be passed to the protocol.  This is 
             mostly useful for protocols that are scripts.
 
-    Exmemo looks for protocols both inside and outside of the project.  Inside 
-    the project, exmemo just looks in the `protocols/` directory.  Outside the 
-    project, exmemo looks in any directory listed in the `shared_protocols` 
-    configuration option.  This makes it easy to have protocols that are shared 
-    between projects:
-    
-        shared_protocols = ['~/research/protocols']
+    {shared_doc}
     """
     argv = pop_protocol_args('show')
-    args = cli.parse_args_via_docopt()
+    args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
@@ -53,16 +71,10 @@ def printer():
             substring from the name of the protocol.  If the substring is not 
             unique, you'll be asked which file you meant.
 
-    Exmemo looks for protocols both inside and outside of the project.  Inside 
-    the project, exmemo just looks in the `protocols/` directory.  Outside the 
-    project, exmemo looks in any directory listed in the `shared_protocols` 
-    configuration option.  This makes it easy to have protocols that are shared 
-    between projects:
-    
-        shared_protocols = ['~/research/protocols']
+    {shared_doc}
     """
     argv = pop_protocol_args('print')
-    args = cli.parse_args_via_docopt()
+    args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
@@ -88,16 +100,10 @@ def save():
             The directory to save the protocol in.  By default this is just the 
             current working directory.
 
-    Exmemo looks for protocols both inside and outside of the project.  Inside 
-    the project, exmemo just looks in the `protocols/` directory.  Outside the 
-    project, exmemo looks in any directory listed in the `shared_protocols` 
-    configuration option.  This makes it easy to have protocols that are shared 
-    between projects:
-    
-        shared_protocols = ['~/research/protocols']
+    {shared_doc}
     """
     argv = pop_protocol_args('save')
-    args = cli.parse_args_via_docopt()
+    args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
@@ -117,15 +123,9 @@ def edit():
             substring from the name of the protocol.  If the substring is not 
             unique, you'll be asked which file you meant.
 
-    Exmemo looks for protocols both inside and outside of the project.  Inside 
-    the project, exmemo just looks in the `protocols/` directory.  Outside the 
-    project, exmemo looks in any directory listed in the `shared_protocols` 
-    configuration option.  This makes it easy to have protocols that are shared 
-    between projects:
-    
-        shared_protocols = ['~/research/protocols']
+    {shared_doc}
     """
-    args = cli.parse_args_via_docopt()
+    args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, [])
@@ -143,15 +143,9 @@ def ls():
         <substr>
             Only list files that contain the given substring.
 
-    Exmemo looks for protocols both inside and outside of the project.  Inside 
-    the project, exmemo just looks in the `protocols/` directory.  Outside the 
-    project, exmemo looks in any directory listed in the `shared_protocols` 
-    configuration option.  This makes it easy to have protocols that are shared 
-    between projects:
-    
-        shared_protocols = ['~/research/protocols']
+    {shared_doc}
     """
-    args = cli.parse_args_via_docopt()
+    args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
 
     for last, dir in utils.last(work.protocols_dirs):
@@ -167,9 +161,15 @@ def plugins():
 
     Usage:
         exmemo protocol plugins
+
+    You can create plugins to add support for file extensions that aren't 
+    understood by Exmemo natively.  A plugin is a class, usually pretty simple, 
+    with methods describing how to show, edit, print, and save a protocol of a 
+    particular file type.  Look in ``exmemo/reader.py`` for examples of how to 
+    write such a class, and ``setup.py`` for examples of how to install them.
     """
     args = cli.parse_args_via_docopt()
-    for plugin in readers.get_plugins():
+    for plugin in readers.get_readers():
         print(f"{plugin.name}: {' '.join(plugin.extensions)}")
 
 

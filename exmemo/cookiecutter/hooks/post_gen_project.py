@@ -10,6 +10,7 @@ import subprocess
 os.mkdir('documents')
 os.mkdir('data')
 os.mkdir('protocols')
+os.mkdir('notebook/build')
 
 # Make a git repository for the project and make the initial commit.
 

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 import re
+import time
 from .. import Workspace
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.roles import XRefRole
 from pathlib import Path
 from pprint import pprint
+
+from html.parser import HTMLParser
 
 def add_expts_to_toc(app, docname, source):
     """
@@ -49,7 +52,7 @@ def add_dates_to_toc(app, doctree):
         ref.insert(0, nodes.literal(date, date))
         ref.insert(1, nodes.Text(pad, pad))
 
-def pubmed_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+def doi_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     """
     Insert a citation (including the authors, title, journal, and publication 
     date) given any valid PubMed identifier (i.e. PMID, PMCID, or DOI).
@@ -76,11 +79,27 @@ def pubmed_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     import metapub
     import requests
 
-    # Look up the article metadata on PubMed.  The method is called 
-    # `article_by_doi()`, but it will also find PMIDs and PMCIDs.
+    # https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python
+    class MarkupStripper(HTMLParser):
+        def __init__(self):
+            self.reset()
+            self.strict = False
+            self.convert_charrefs= True
+            self.fed = []
+        def handle_data(self, d):
+            self.fed.append(d)
+        def get_data(self):
+            return ''.join(self.fed)
+    def strip_html(html):
+        s = MarkupStripper()
+        s.feed(html)
+        return s.get_data()
+
+    # Look up the article metadata on CrossRef.
     try:
-        pubmed = metapub.PubMedFetcher()
-        meta = pubmed.article_by_doi(text)
+        crossref = metapub.CrossRef()
+        hits = crossref.query(text)
+        hit = crossref.get_top_result(hits)
 
     # Give a useful error message is the article can't be found.
     except metapub.exceptions.MetaPubError as e:
@@ -89,12 +108,18 @@ def pubmed_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
         return [problem], [error]
 
     except requests.exceptions.ConnectionError as e:
-        error = inliner.reporter.warning("Couldn't connect to PubMed, may be offline.", line=lineno)
+        warning = inliner.reporter.warning("Couldn't connect to CrossRef, may be offline.", line=lineno)
         p = nodes.paragraph(text, text)
-        return [p], [error]
+        return [p], [warning]
 
     # Make a paragraph containing the citation.
-    p = nodes.paragraph(meta.citation, meta.citation)
+    if hit is None:
+        warning = inliner.reporter.warning(f"No matches found for DOI: {text}", line=lineno)
+        p = nodes.paragraph(text, text)
+        return [p], [warning]
+
+    citation = strip_html(hit['fullCitation'])
+    p = nodes.paragraph(citation, citation)
     return [p], []
 
 class ExperimentRole(XRefRole):
@@ -193,7 +218,7 @@ def setup(app):
     app.connect('doctree-read', add_dates_to_toc)
 
     app.add_role('expt', ExperimentRole())
-    app.add_role('pubmed', pubmed_role)
+    app.add_role('doi', doi_role)
 
     app.add_directive('update', UpdateDirective)
     app.add_directive('show-nodes', ShowNodesDirective)

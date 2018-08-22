@@ -10,7 +10,6 @@ from subprocess import DEVNULL
 from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
-from pprint import pprint
 from . import readers, utils
 import platform
 import sys
@@ -118,14 +117,28 @@ class Workspace:
         return self.root_dir / 'notebook'
 
     @property
+    def current_experiment_entry(self):
+        cwd = self.get_cwd().resolve()
+        if self.notebook_dir not in cwd.parents:
+            return None
+        for expt in self.iter_experiment_entries():
+            if cwd == expt.parent or expt.parent in cwd.parents:
+                return expt
+
+    @property
+    def current_experiment_dir(self):
+        entry = self.current_experiment_entry
+        return entry and entry.parent
+
+    @property
     def protocols_dir(self):
         return self.root_dir / 'protocols'
 
     @property
     def protocols_dirs(self):
-        local_dirs = [Path('.'), self.protocols_dir]
+        local_dirs = [self.current_experiment_dir, self.protocols_dir]
         shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
-        return [x for x in local_dirs + shared_dirs if x.exists()]
+        return [x for x in local_dirs + shared_dirs if x and x.exists()]
 
     @property
     def has_project_files(self):
@@ -147,47 +160,60 @@ class Workspace:
         return iter_paths_matching_substr(self.data_dir, substr)
 
     def iter_experiments(self, substr=None):
-        yield from (x.parent for x in iter_paths_matching_substr(
+        yield from (x.parent for x in self.iter_experiment_entries(substr))
+
+    def iter_experiment_entries(self, substr=None):
+        yield from (x for x in iter_paths_matching_substr(
             self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
 
     def iter_notebook_entries(self, substr=None):
         yield from (x for x in iter_paths_matching_substr(
             self.notebook_dir, substr, '/{}.rst'))
-        yield from (x for x in iter_paths_matching_substr(
-            self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
+        yield from self.iter_experiment_entries(substr)
 
     def iter_protocols(self, substr=None):
         for dir in self.protocols_dirs:
-            yield from iter_paths_matching_substr(dir, substr)
+            yield from self.iter_protocols_from_dir(dir, substr)
 
     def iter_protocols_from_dir(self, dir, substr=None):
-        yield from iter_paths_matching_substr(dir, substr)
+        from . import readers
+        extensions = readers.get_known_extensions()
+        if substr is not None: extensions.add('')
+
+        include = ['{}' + x for x in extensions]
+        exclude = [
+                f'**/{8*"[0-9]"}_*',  # Exclude date-stamped protocols.
+        ]
+        yield from iter_paths_matching_substr(dir, substr, include, exclude)
 
     def pick_path(self, substr, paths, default=None, no_choices=None):
         paths = list(paths)
 
+        # Complain if there are no paths to pick from.
         if len(paths) == 0:
             raise no_choices or CantMatchSubstr('choices', substr)
 
+        # If there's only one option, return it.
         if len(paths) == 1:
             return paths[0]
 
+        # If the user didn't specify anything, just make our best guess and run 
+        # with it.
         if substr is None:
-            # If the user provided a default, return it.
             if default is not None:
                 return default
 
-            # If the current working directory is one of the paths, return it.
-            cwd = self.get_cwd()
+            # Sort the paths alphabetically and return the last one, which will 
+            # be the most recent if the paths are prefixed by date.
             resolved_paths = [x.resolve() for x in paths]
-            if cwd.resolve() in resolved_paths:
-                return cwd
+            resolved_paths.sort()
 
-            # Otherwise just return the last path, which will be the most
-            # recent if the paths are prefixed by date and sorted.
             return paths[-1]
 
-        # Once I've written the config-file system, there should be an option
+        # If the user specified a pattern, but there are multiple matches, ask 
+        # for clarification.
+        #
+        # Once I've written the config-file system, there should be an option 
         # to change how this works (i.e. CLI vs GUI vs automatic choice).
         i = utils.pick_one(x.name for x in paths)
         return paths[i]
@@ -201,12 +227,14 @@ class Workspace:
     def pick_experiment(self, substr):
         return self.pick_path(
                 substr, self.iter_experiments(substr),
+                default=self.current_experiment_dir,
                 no_choices=CantMatchSubstr('experiments', substr),
         )
 
     def pick_notebook_entry(self, substr):
         return self.pick_path(
                 substr, self.iter_notebook_entries(substr),
+                default=self.current_experiment_entry,
                 no_choices=CantMatchSubstr('notebook entries', substr),
         )
 
@@ -320,8 +348,6 @@ class CantMatchSubstr(Exception):
     def __init__(self, type, substr):
         self.message = f"No {type} matching '{substr}'."
 
-
-
 def slug_from_title(title):
 
     class Sanitizer: #
@@ -333,14 +359,11 @@ def slug_from_title(title):
 
     return title.translate(Sanitizer())
 
-def iter_paths_matching_substr(dir, substr=None, glob=None, exclude=['.*'], symlinks=True, include_origin=False):
+def iter_paths_matching_substr(dir, substr=None, include=None, exclude=None, symlinks=True, include_origin=False):
     substr = '*' if substr is None else f'*{substr}*'
     substr = substr.replace('/', '*/**/*')
-
-    if glob is None:
-        include = [f'**/{substr}', f'**/{substr}/**']  # Match files and dirs.
-    else:
-        include = glob.format(substr)
+    include = _parse_globs(include, substr, ['**/{}', '**/{}/**'])
+    exclude = _parse_globs(exclude, substr, '.*')
 
     matches = sorted(
             Path(x) for x in formic.FileSet(
@@ -350,10 +373,19 @@ def iter_paths_matching_substr(dir, substr=None, glob=None, exclude=['.*'], syml
                 symlinks=symlinks,
             )
     )
-
     if include_origin:
         yield from ((dir, x) for x in matches)
     else:
         yield from matches
+
+def _parse_globs(globs, substr, default):
+    if globs is None:
+        globs = default
+    if isinstance(globs, str):
+        globs = [globs]
+
+    return [x.format(substr) for x in globs]
+
+
 
 
