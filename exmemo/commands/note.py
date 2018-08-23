@@ -43,7 +43,7 @@ def edit():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    path = str(work.pick_notebook_entry(args['<substr>']))
+    path = work.pick_notebook_entry(args['<substr>'])
 
     work.launch_editor(path)
 
@@ -67,7 +67,7 @@ def open():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    expt = str(work.pick_experiment(args['<substr>']))
+    expt = work.pick_experiment(args['<substr>'])
 
     work.launch_terminal(expt)
 
@@ -101,7 +101,7 @@ def directory():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    expt = str(work.pick_experiment(args['<substr>']))
+    expt = work.pick_experiment(args['<substr>'])
 
     print(expt.resolve())
 
@@ -148,10 +148,9 @@ def browse():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    url = str(work.notebook_dir / 'build' / 'html' / 'index.html')
+    url = work.notebook_dir / 'build' / 'html' / 'index.html'
 
     work.launch_browser(f'file://{url}', args['--new-window'])
-
 
 def ls():
     """\

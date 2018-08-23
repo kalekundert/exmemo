@@ -266,8 +266,7 @@ class Workspace:
     def init_experiment(self, title):
         slug = slug_from_title(title)
         expt = self.notebook_dir / f'{utils.ymd()}_{slug}'
-        # Use of str for Windows paths
-        rst = str(expt / f'{slug}.rst')
+        rst = expt / f'{slug}.rst'
 
         if not os.path.isdir(expt):
             expt.mkdir()
@@ -289,7 +288,7 @@ class Workspace:
             system_editor = 'vim'
 
         editor = self.config.get('editor', os.environ.get('EDITOR', system_editor))
-        cmd = *shlex.split(editor), path
+        cmd = *shlex.split(editor), str(path)
         subprocess.Popen(cmd)
 
     def launch_terminal(self, dir):
@@ -299,7 +298,7 @@ class Workspace:
 
     def launch_pdf(self, path):
         pdf = self.config.get('pdf', os.environ.get('PDF')) or 'evince'
-        cmd = *shlex.split(pdf), path
+        cmd = *shlex.split(pdf), str(path)
         subprocess.Popen(cmd)
 
     def launch_browser(self, url, new_window=False):
@@ -307,9 +306,9 @@ class Workspace:
         new_window_flag = self.config.get('browser_new_window_flag', os.environ.get('BROWSER_NEW_WINDOW_FLAG')) or '--new-window'
 
         if new_window:
-            cmd = *shlex.split(browser), *shlex.split(new_window_flag), url
+            cmd = *shlex.split(browser), *shlex.split(new_window_flag), str(url)
         else:
-            cmd = *shlex.split(browser), url
+            cmd = *shlex.split(browser), str(url)
 
         subprocess.Popen(cmd)
 
