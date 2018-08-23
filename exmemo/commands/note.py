@@ -14,8 +14,8 @@ def new():
 
     Arguments:
         <title>
-            The title of the experiment.  This should be title cased, with
-            words separated by spaces.  Use quotes so the shell won't interpret
+            The title of the experiment.  This should be title cased, with 
+            words separated by spaces.  Use quotes so the shell won't interpret 
             it as multiple arguments.
     """
     args = cli.parse_args_via_docopt()
@@ -33,12 +33,12 @@ def edit():
 
     Arguments:
         <substr>
-            The experiment to edit.  You don't need to specify the whole name,
-            just enough to be unique.  If multiple experiments match the given
-            substr, you'll will be asked which one you mean.  If you don't
+            The experiment to edit.  You don't need to specify the whole name, 
+            just enough to be unique.  If multiple experiments match the given 
+            substr, you'll will be asked which one you mean.  If you don't 
             specify an experiment, the most recently created one will be used.
 
-    You can specify which text editor you prefer in an `.exmemorc` file, or via
+    You can specify which text editor you prefer in an `.exmemorc` file, or via 
     the $EDITOR environment variable.
     """
     args = cli.parse_args_via_docopt()
@@ -57,12 +57,12 @@ def open():
 
     Arguments:
         <substr>
-            The experiment to open.  You don't need to specify the whole name,
-            just enough to be unique.  If multiple experiments match the given
-            substr, you'll will be asked which one you mean.  If you don't
+            The experiment to open.  You don't need to specify the whole name, 
+            just enough to be unique.  If multiple experiments match the given 
+            substr, you'll will be asked which one you mean.  If you don't 
             specify an experiment, the most recently created one will be used.
 
-    You can specify which terminal you prefer in an `.exmemorc` file, or via
+    You can specify which terminal you prefer in an `.exmemorc` file, or via 
     the $TERMINAL environment variable.
     """
     args = cli.parse_args_via_docopt()
@@ -74,7 +74,7 @@ def open():
 @cli.priority(30)
 def directory():
     """\
-    Print the path to the given experiment.  This is often used to create an
+    Print the path to the given experiment.  This is often used to create an 
     alias that cd's into the given experiment.
 
     Usage:
@@ -82,15 +82,15 @@ def directory():
 
     Arguments:
         <substr>
-            The experiment you're interested in.  You don't need to specify the
-            whole name, just enough to be unique.  If multiple experiments
-            match the given substr, you'll will be asked which one you mean.
-            If you don't specify an experiment, the most recently created one
+            The experiment you're interested in.  You don't need to specify the 
+            whole name, just enough to be unique.  If multiple experiments 
+            match the given substr, you'll will be asked which one you mean.  
+            If you don't specify an experiment, the most recently created one 
             will be implied.
 
-    Programs are not allowed to change the state of the shell (i.e. to move you
-    into a different directory), so if you want a command that automatically
-    cd's into a given experiment, you need to write your own shell function.
+    Programs are not allowed to change the state of the shell (i.e. to move you 
+    into a different directory), so if you want a command that automatically 
+    cd's into a given experiment, you need to write your own shell function.  
     This is how such a function would look in bash:
 
         function ed () {
@@ -115,8 +115,8 @@ def build():
 
     Options:
         -f --force
-            Force Sphinx to rebuild the whole project from scratch, rather than
-            just building the files that changed since last time.  You often
+            Force Sphinx to rebuild the whole project from scratch, rather than 
+            just building the files that changed since last time.  You often 
             need to do this after you add a new experiment.
     """
     args = cli.parse_args_via_docopt()
@@ -134,22 +134,22 @@ def browse():
 
     Options:
         -w --new-window
-            Open a new window in the browser.  The default is to just open a
+            Open a new window in the browser.  The default is to just open a 
             new tab in whichever browser window you most recently used.
 
-    The default browser is firefox, but you can change this by setting either
-    the `browser` configuration option or the `$BROWSER` environment variable.
-    If you plan to use the `-w` option with this command, you may also need to
-    specify the command-line switch used to get the browser to create a new
-    window.  The default is `--new-window`.  That works for both firefox and
-    chrome, but I don't know about other browsers.  You can change it by
-    setting either the `browser_new_window_flag` configuration option or the
+    The default browser is firefox, but you can change this by setting either 
+    the `browser` configuration option or the `$BROWSER` environment variable.  
+    If you plan to use the `-w` option with this command, you may also need to 
+    specify the command-line switch used to get the browser to create a new 
+    window.  The default is `--new-window`.  That works for both firefox and 
+    chrome, but I don't know about other browsers.  You can change it by 
+    setting either the `browser_new_window_flag` configuration option or the 
     `$BROWSER_NEW_WINDOW_FLAG` environment variable.
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
     url = work.notebook_dir / 'build' / 'html' / 'index.html'
-
+    
     work.launch_browser(f'file://{url}', args['--new-window'])
 
 def ls():
@@ -168,3 +168,4 @@ def ls():
 
     for expt in workspace.iter_experiments(args['<substr>']):
         print(expt.name)
+
