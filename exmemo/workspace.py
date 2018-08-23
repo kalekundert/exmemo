@@ -63,6 +63,7 @@ class Workspace:
         # us the current working directory without any symlinks.
         return Path(os.getenv('PWD', os.getcwd()))
 
+
     def __init__(self, root):
         # Use `os.path.abspath()` instead of `Path.resolve()` to avoid 
         # resolving any symlinks in the path.
