@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import os
+import sys
+import platform
 import toml
 import formic
 import shlex
@@ -11,8 +13,6 @@ from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
 from . import readers, utils
-import platform
-import sys
 
 app = AppDirs('exmemo')
 
@@ -283,13 +283,12 @@ class Workspace:
         self.launch_editor(rst)
 
     def launch_editor(self, path):
-        if os.environ.get('EDITOR') is None:
-            if platform.system() == "Windows":
-                editor = 'write.exe'
-            else:
-                editor = 'vim'
+        if platform.system() == 'Windows':
+            system_editor = 'write.exe'
         else:
-            editor = self.config.get('editor', os.environ.get('EDITOR'))
+            system_editor = 'vim'
+
+        editor = self.config.get('editor', os.environ.get('EDITOR', system_editor))
         cmd = *shlex.split(editor), path
         subprocess.Popen(cmd)
 
