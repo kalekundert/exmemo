@@ -21,9 +21,9 @@ class Workspace:
     @classmethod
     def from_dir(cls, dir, strict=True):
         """
-        Create a workspace object containing given directory (or the current
-        working directory, by default).  This involves descending the directory
-        hierarchy looking for the root of the project, which should contain a
+        Create a workspace object containing given directory (or the current 
+        working directory, by default).  This involves descending the directory 
+        hierarchy looking for the root of the project, which should contain a 
         characteristic set of files and directories.
         """
 
@@ -43,9 +43,9 @@ class Workspace:
     @classmethod
     def from_cwd(cls, strict=True):
         """
-        Create a workspace object containing given directory (or the current
-        working directory, by default).  This involves descending the directory
-        hierarchy looking for the root of the project, which should contain a
+        Create a workspace object containing given directory (or the current 
+        working directory, by default).  This involves descending the directory 
+        hierarchy looking for the root of the project, which should contain a 
         characteristic set of files and directories.
         """
         return cls.from_dir(cls.get_cwd(), strict)
@@ -53,18 +53,18 @@ class Workspace:
     @staticmethod
     def get_cwd():
         """
-        Return the current working directory, making an effort to keep the path
+        Return the current working directory, making an effort to keep the path 
         nice and short by not resolving symlinks.
         """
-        # Most shells will set `$PWD` with the path the user sees the current
-        # working directory as, taking into account whichever symlinks they
-        # used to get there.  So this is the path we want to use, if it's
-        # available.  If it's not, fall back on `os.getcwd()`, which will give
+        # Most shells will set `$PWD` with the path the user sees the current 
+        # working directory as, taking into account whichever symlinks they 
+        # used to get there.  So this is the path we want to use, if it's 
+        # available.  If it's not, fall back on `os.getcwd()`, which will give 
         # us the current working directory without any symlinks.
         return Path(os.getenv('PWD', os.getcwd()))
 
     def __init__(self, root):
-        # Use `os.path.abspath()` instead of `Path.resolve()` to avoid
+        # Use `os.path.abspath()` instead of `Path.resolve()` to avoid 
         # resolving any symlinks in the path.
         self._root = Path(os.path.abspath(root))
 
