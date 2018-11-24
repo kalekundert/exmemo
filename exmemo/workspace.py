@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import os
+import sys
+import platform
 import toml
 import formic
 import shlex
@@ -157,7 +159,7 @@ class Workspace:
 
     def iter_data(self, substr=None):
         return iter_paths_matching_substr(self.data_dir, substr)
-    
+
     def iter_experiments(self, substr=None):
         yield from (x.parent for x in self.iter_experiment_entries(substr))
 
@@ -267,19 +269,27 @@ class Workspace:
         expt = self.notebook_dir / f'{utils.ymd()}_{slug}'
         rst = expt / f'{slug}.rst'
 
-        expt.mkdir()
+        if not os.path.isdir(expt):
+            expt.mkdir()
+        else:
+            sys.exit('Experiment exists. Use exmemo [note] edit [<substr>].')
+
         with rst.open('w') as file:
             file.write(f"""\
 {'*' * len(title)}
 {title}
 {'*' * len(title)}
 """)
-
         self.launch_editor(rst)
 
     def launch_editor(self, path):
-        editor = self.config.get('editor', os.environ.get('EDITOR')) or 'vim'
-        cmd = *shlex.split(editor), path
+        if platform.system() == 'Windows':
+            system_editor = 'write.exe'
+        else:
+            system_editor = 'vim'
+
+        editor = self.config.get('editor', os.environ.get('EDITOR', system_editor))
+        cmd = *shlex.split(editor), str(path)
         subprocess.Popen(cmd)
 
     def launch_terminal(self, dir):
@@ -289,7 +299,7 @@ class Workspace:
 
     def launch_pdf(self, path):
         pdf = self.config.get('pdf', os.environ.get('PDF')) or 'evince'
-        cmd = *shlex.split(pdf), path
+        cmd = *shlex.split(pdf), str(path)
         subprocess.Popen(cmd)
 
     def launch_browser(self, url, new_window=False):
@@ -297,9 +307,9 @@ class Workspace:
         new_window_flag = self.config.get('browser_new_window_flag', os.environ.get('BROWSER_NEW_WINDOW_FLAG')) or '--new-window'
 
         if new_window:
-            cmd = *shlex.split(browser), *shlex.split(new_window_flag), url
+            cmd = *shlex.split(browser), *shlex.split(new_window_flag), str(url)
         else:
-            cmd = *shlex.split(browser), url
+            cmd = *shlex.split(browser), str(url)
 
         subprocess.Popen(cmd)
 
