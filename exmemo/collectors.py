@@ -66,7 +66,7 @@ class RsyncCollector:
         # Use `os.path.expanduser()` for `src` because it doesn't clobber 
         # trailing slashes, which are significant to rsync.
         self.src = os.path.expanduser(src)
-        self.dest = Path(dest or '').expanduser()
+        self.dest = Path(dest or '.').expanduser()
         self.cmd = cmd or 'rsync --archive --ignore-existing {src} {dest}'
         self.precmd = precmd or ''
         self.postcmd = postcmd or ''
@@ -119,7 +119,7 @@ class UsbCollector(RsyncCollector):
         A shell command to execute after running rsync.
     """
 
-    def __init__(self, src, dest, mountpoint=None, rsync=None, precmd=None, postcmd=None):
+    def __init__(self, src, dest=None, mountpoint=None, rsync=None, precmd=None, postcmd=None):
         super().__init__(src, dest, rsync, precmd, postcmd)
         self.mountpoint = mountpoint and Path(mountpoint).expanduser()
 
