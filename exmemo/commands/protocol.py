@@ -3,7 +3,6 @@
 import sys
 from . import cli
 from .. import Workspace, readers, utils
-from pprint import pprint
 
 known_extensions = '\n    '.join(
         ' '.join(Reader.extensions)

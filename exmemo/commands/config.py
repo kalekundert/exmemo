@@ -4,7 +4,6 @@ import toml
 from . import cli
 from .. import Workspace
 from ast import literal_eval
-from pprint import pprint
 
 def get():
     """\

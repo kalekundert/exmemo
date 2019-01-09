@@ -4,7 +4,6 @@ import subprocess
 from . import cli
 from .. import Workspace, utils
 from pathlib import Path
-from pprint import pprint
 
 @cli.priority(10)
 def sync():

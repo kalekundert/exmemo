@@ -2,7 +2,6 @@
 
 from . import cli
 from .. import Workspace
-from pprint import pprint
 
 @cli.priority(30)
 def new():

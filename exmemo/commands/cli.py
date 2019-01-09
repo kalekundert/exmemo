@@ -5,7 +5,6 @@ import docopt
 import textwrap
 import functools
 from .. import __version__, utils, get_plugins
-from pprint import pprint
 
 def run_subcommand(group, name, level=None):
     """
