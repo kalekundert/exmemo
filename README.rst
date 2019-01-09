@@ -37,26 +37,30 @@ At the moment there isn't much online documentation, but the command-line help
 system should have any information you need::
 
    $ exmemo --help
+   Manage a project directory.
+
    Usage:
-    exmemo <command> [<args>...]
-    exmemo (-h | --help)
-    exmemo --version
-   
+       exmemo <command> [<args>...]
+       exmemo (-h | --help)
+       exmemo --version
+
    Commands:
        init:     Create a directory layout for a new project.
        new:      Create a new experiment with a blank notebook entry.
        edit:     Open the notebook entry for the given experiment in a text [...]
        open:     Open a new terminal cd'd into the given experiment.
        build:    Render the lab notebook to HTML using Sphinx.
+       browse:   Open the rendered lab notebook in a web browser.
        show:     Display the given protocol.
        print:    Print the given protocol.
-       save:     Save the protocol to a date-stamped text file that can be [...]
+       archive:  Save the protocol to a date-stamped text file that can be [...]
        sync:     Import data into the project from any available source.
        link:     Make a symbolic link to the indicated data file.
        project:  Manage the entire project.
        note:     Keep notes on your day-to-day experiments.
        protocol: Manage, display, and print protocols.
        data:     Interact with data files.
+       config:   Get and set configuration options.
        debug:    Print information that can help diagnose problems with exmemo.
 
 You can also get help for individual subcommands::
@@ -147,9 +151,9 @@ first launch a terminal that's cd'd into the experiment subdirectory::
 
    $ exmemo note open twist
 
-Then run the following command to make a copy of the protocol::
+Then run the following command to make a date-stamped copy of the protocol::
 
-   $ exmemo protocol save treadmill
+   $ exmemo protocol archive treadmill
 
 Text protocols can be included in a restructured text document using the ``..  
 literal-include::`` directive, and anything else can be included using the 
@@ -258,7 +262,7 @@ ideal.  For that reason, I use the following set of shell aliases::
    alias epp='exmemo protocol print'
    alias epe='exmemo protocol edit'
    alias epl='exmemo protocol ls'
-   alias epf='exmemo protocol save'
+   alias epr='exmemo protocol archive'
    alias edy='exmemo data sync'
    alias edk='exmemo data link'
    alias edg='exmemo data gel'

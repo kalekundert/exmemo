@@ -57,7 +57,7 @@ def show():
     reader.show(work)
 
 @cli.priority(20)
-def printer():
+def print():
     """\
     Print the given protocol.
 
@@ -81,33 +81,33 @@ def printer():
     reader.print(work)
 
 @cli.priority(20)
-def save():
+def archive():
     """\
     Save the protocol to a date-stamped text file that can be included in your 
     lab notebook.
 
     Usage:
-        exmemo [protocol] save <substr> [<dir>]
+        exmemo [protocol] archive <substr> [<dir>]
 
     Arguments:
         <substr>
-            A string specifying the protocol to date-stamp and save.  You can 
-            provide any substring from the name of the protocol.  If the 
-            substring is not unique, you'll be asked which file you meant.
+            A string specifying the protocol to archive.  You can provide any 
+            substring from the name of the protocol.  If the substring is not 
+            unique, you'll be asked which file you meant.
 
         <dir>
-            The directory to save the protocol in.  By default this is just the 
+            The directory to save the archive in.  By default this is just the 
             current working directory.
 
     {shared_doc}
     """
-    argv = pop_protocol_args('save')
+    argv = pop_protocol_args('archive')
     args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
     protocol = work.pick_protocol(args['<substr>'])
     reader = readers.pick_reader(protocol, argv)
 
-    reader.save(work, args['<dir>'])
+    reader.archive(work, args['<dir>'])
 
 def edit():
     """

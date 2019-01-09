@@ -41,7 +41,7 @@ class Reader:
     def can_handle_path(self):
         return self.path.suffix in self.extensions
 
-    def save(self, work, dir):
+    def archive(self, work, dir):
         dest = dir / f'{ymd()}_{self.path.name}'
         shutil.copy(self.path, dest)
 
@@ -60,7 +60,7 @@ class TxtReader(Reader):
     def print(self, work):
         wet_copy.print_protocol(self.path)
 
-    def save(self, work, dir):
+    def archive(self, work, dir):
         fossilize([self.path], f'{dir or "."}/$.txt')
 
 
@@ -81,7 +81,7 @@ class ScriptReader(Reader):
     def print(self, work):
         wet_copy.print_protocol(self.command_str)
 
-    def save(self, work, dir):
+    def archive(self, work, dir):
         fossilize(self.command, f'{dir or "."}/$.txt')
 
     @property
