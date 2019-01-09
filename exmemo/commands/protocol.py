@@ -79,6 +79,7 @@ def print():
     reader = readers.pick_reader(protocol, argv)
 
     reader.print(work)
+    reader.archive(work)
 
 @cli.priority(20)
 def archive():
