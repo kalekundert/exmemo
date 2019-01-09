@@ -52,14 +52,17 @@ class RsyncCollector:
     cmd (default: 'rsync --archive --ignore-existing {src} {dest}'):
         The rsync command to execute.  {src} and {dest} will be replaced 
         with the values of the `src` and `dest` options, respectively.  The 
-        purpose of this option is to allow you to pass rsync different 
-        flags, or even to run a different command entirely.
+        command will be run from the project data directory.  The purpose 
+        of this option is to allow you to pass rsync different flags, or 
+        even to run a different command entirely.
 
     precmd (default: ''):
-        A shell command to execute before running rsync.
+        A shell command to execute before running rsync.  The command will 
+        be run from the project data directory.
 
     postcmd (default: ''):
-        A shell command to execute after running rsync.
+        A shell command to execute after running rsync.  The command will 
+        be run from the project data directory.
     """
 
     def __init__(self, src, dest=None, cmd=None, precmd=None, postcmd=None):
@@ -73,12 +76,15 @@ class RsyncCollector:
 
     def sync(self, work, verbose):
         dest = work.data_dir / self.dest
-        rsync = shlex.split(self.cmd.format(src=self.src, dest=dest))
+        paths = dict(src=self.src, dest=dest)
+        rsync = [x.format(**paths) for x in shlex.split(self.cmd)]
 
         for precmd in self.precmd.split('\n'):
             run(precmd, verbose, cwd=work.data_dir, shell=True)
 
-        run(rsync, verbose)
+        # Shell-mode disabled to eliminate the possibility of getting 
+        # confused by spaces/quotes/whatever in file names.
+        run(rsync, verbose, cwd=work.data_dir, shell=False)
 
         for postcmd in self.postcmd.split('\n'):
             run(postcmd, verbose, cwd=work.data_dir, shell=True)
@@ -109,14 +115,21 @@ class UsbCollector(RsyncCollector):
     cmd (default: 'rsync --archive --ignore-existing {src} {dest}'):
         The rsync command to execute.  {src} and {dest} will be replaced 
         with the values of the `src` and `dest` options, respectively.  The 
-        purpose of this option is to allow you to pass rsync different 
-        flags, or even to run a different command entirely.
+        command will be run from the project data directory.  The purpose 
+        of this option is to allow you to pass rsync different flags, or 
+        even to run a different command entirely.
 
     precmd (default: ''):
-        A shell command to execute before running rsync.
+        A shell command to execute before running rsync, but after the USB 
+        drive has been mounted.  The command will be run from the project 
+        data directory.
+    
 
     postcmd (default: ''):
-        A shell command to execute after running rsync.
+        A shell command to execute after running rsync, but before the USB 
+        drive has been unmounted.  The command will be run from the project 
+        data directory.
+    .
     """
 
     def __init__(self, src, dest=None, mountpoint=None, rsync=None, precmd=None, postcmd=None):

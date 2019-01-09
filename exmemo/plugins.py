@@ -2,7 +2,6 @@
 
 import inspect
 from pkg_resources import iter_entry_points
-from pprint import pprint
 
 def get_plugins(group):
     plugins = []
