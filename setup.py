@@ -81,7 +81,7 @@ setup(
             'show=exmemo.commands.protocol:show',
             'edit=exmemo.commands.protocol:edit',
             'print=exmemo.commands.protocol:print',
-            'save=exmemo.commands.protocol:archive',
+            'archive=exmemo.commands.protocol:archive',
             'plugins=exmemo.commands.protocol:plugins',
             'ls=exmemo.commands.protocol:ls',
         ],
