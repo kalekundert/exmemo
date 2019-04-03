@@ -4,7 +4,6 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
-from pprint import pprint
 
 def get_collectors():
     from .plugins import get_plugins

@@ -6,7 +6,6 @@ import wet_copy
 import subprocess
 from pathlib import Path
 from fossilize import fossilize
-from pprint import pprint
 
 def get_readers():
     from .plugins import get_plugins

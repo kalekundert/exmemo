@@ -7,7 +7,6 @@ from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.roles import XRefRole
 from pathlib import Path
-from pprint import pprint
 
 from html.parser import HTMLParser
 
