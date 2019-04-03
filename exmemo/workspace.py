@@ -61,7 +61,24 @@ class Workspace:
         # used to get there.  So this is the path we want to use, if it's 
         # available.  If it's not, fall back on `os.getcwd()`, which will give 
         # us the current working directory without any symlinks.
-        return Path(os.getenv('PWD', os.getcwd()))
+
+        # The logic is really complicated because I ran into a bug in xonsh 
+        # where `os.getenv('PWD')` and `os.getcwd()` would actually return 
+        # different paths!  To be robust against this kind of situation, the 
+        # code now checks if the two paths differ and trusts `os.getcwd()` if 
+        # they do.
+
+        pretty_cwd = os.getenv('PWD')
+        real_cwd = os.getcwd()
+
+        if not pretty_cwd:
+            return Path(real_cwd)
+        if not os.path.samefile(pretty_cwd, real_cwd):
+            return Path(real_cwd)
+
+        return Path(pretty_cwd)
+
+        
 
 
     def __init__(self, root):
