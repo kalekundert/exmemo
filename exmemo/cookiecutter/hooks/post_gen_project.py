@@ -7,10 +7,10 @@ import subprocess
 # included directly in the cookiecutter, because they're empty, so can't be 
 # part of the actual repository.
 
-os.mkdir('documents')
-os.mkdir('data')
-os.mkdir('protocols')
-os.mkdir('notebook/build')
+os.makedirs('documents', exist_ok=True)
+os.makedirs('data', exist_ok=True)
+os.makedirs('protocols', exist_ok=True)
+os.makedirs('notebook/build', exist_ok=True)
 
 # Make a git repository for the project and make the initial commit.
 
