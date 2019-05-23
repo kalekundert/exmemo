@@ -78,8 +78,6 @@ class Workspace:
 
         return Path(pretty_cwd)
 
-        
-
 
     def __init__(self, root):
         # Use `os.path.abspath()` instead of `Path.resolve()` to avoid 

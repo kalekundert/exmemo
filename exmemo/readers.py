@@ -28,6 +28,11 @@ def pick_reader(path, args):
 
     raise CantReadProtocol(path, args, plugins)
 
+def ymd():
+    from datetime import datetime
+    now = datetime.now()
+    return now.strftime('%Y%m%d')
+
 
 class Reader:
     extensions = []
@@ -41,7 +46,7 @@ class Reader:
         return self.path.suffix in self.extensions
 
     def archive(self, work, dir=None):
-        dest = (dir or '.') / f'{ymd()}_{self.path.name}'
+        dest = Path(dir or '.') / f'{ymd()}_{self.path.name}'
         shutil.copy(self.path, dest)
 
 
@@ -89,7 +94,7 @@ class ScriptReader(Reader):
 
     @property
     def command_str(self):
-        return ' '.join(shlex.quote(str(x)) for x in self.command)
+        return ' '.join(str(x) for x in self.command)
 
 
 class DocReader(Reader):
