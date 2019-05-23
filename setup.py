@@ -8,7 +8,7 @@ with open('README.rst') as file:
 
 setup(
     name='exmemo',
-    version='0.1.0',
+    version='0.2.0',
     author='Kale Kundert',
     author_email='kale@thekunderts.net',
     url='https://github.com/kalekundert/exmemo',
@@ -26,7 +26,8 @@ setup(
         'docopt',
         'formic-py3',
         'fossilize',
-        'metapub',
+        #'metapub',
+        'habanero',
         'nonstdlib',
         'PyYAML',
         'sphinx',
