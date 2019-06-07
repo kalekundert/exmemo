@@ -1,6 +1,8 @@
 <div class="figure">
 <div id="{{div_id}}"></div>
+{% if caption %}
 <p class="caption"><span class="caption-text">{{caption}}</span></p>
+{% endif %}
 </div>
 
 <script type="text/javascript" src="{{handsontable_js}}"></script>
@@ -13,7 +15,7 @@
       colHeaders: {{header}},
       rowHeaders: false,
       columnSorting: {indicator: true},
-      preventOverflow: "{{overflow}}",
+      preventOverflow: 'horizontal',
       licenseKey: "non-commercial-and-evaluation",
     });
   //});
