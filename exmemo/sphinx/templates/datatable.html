@@ -1,0 +1,20 @@
+<div class="figure">
+<div id="{{div_id}}"></div>
+<p class="caption"><span class="caption-text">{{caption}}</span></p>
+</div>
+
+<script type="text/javascript" src="{{handsontable_js}}"></script>
+<script>
+  //$(document).ready(function() {
+    var div = document.getElementById('{{div_id}}');
+    var hot = new Handsontable(div, {
+      data: {{data}},
+      readOnly: true,
+      colHeaders: {{header}},
+      rowHeaders: false,
+      columnSorting: {indicator: true},
+      preventOverflow: "{{overflow}}",
+      licenseKey: "non-commercial-and-evaluation",
+    });
+  //});
+</script>

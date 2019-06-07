@@ -15,7 +15,7 @@
 from docutils import nodes
 from docutils.parsers.rst.directives.tables import Table
 
-def dilution(argument): #
+def dilution(argument):
     import re
     match = re.match(r'(\d+)x', str(argument))
 
@@ -24,7 +24,7 @@ def dilution(argument): #
     else:
         raise ValueError(f"dilution should be a number followed by 'x' (e.g. '20x'), not '{argument}'")
 
-def make_row(*cells): #
+def make_row(*cells):
     row = nodes.row()
 
     for text in map(str, cells):
@@ -34,7 +34,7 @@ def make_row(*cells): #
 
     return row
 
-def make_cols(directive, num_cols): #
+def make_cols(directive, num_cols):
     tgroup = nodes.tgroup(cols=num_cols)
     col_widths = directive.get_column_widths(num_cols)
 
@@ -45,7 +45,7 @@ def make_cols(directive, num_cols): #
 
     return tgroup
 
-def align_cols(table, *alignments): #
+def align_cols(table, *alignments):
     for tgroup in table:
         if isinstance(tgroup, nodes.tgroup):
             for child in tgroup:
@@ -54,7 +54,7 @@ def align_cols(table, *alignments): #
                         for cell, alignment in zip(row, alignments):
                             cell['classes'].append(f'{alignment}-align')
 
-class OdDirective(Table): #
+class OdDirective(Table):
     has_content = True
     option_spec = {
             'title': lambda x: x,
@@ -62,7 +62,7 @@ class OdDirective(Table): #
             **Table.option_spec
     }
     
-    def run(self): #
+    def run(self):
         table = nodes.table()
 
         dilution = self.options.get('dilution', None)
@@ -142,9 +142,9 @@ from docutils import nodes
 from docutils.parsers.rst.directives.tables import Table
 from nonstdlib import sci
 
-class Dilutions: #
+class Dilutions:
 
-    def __init__(self, *args): #
+    def __init__(self, *args):
         self.base = None
         self.powers = None
         self.override = None
@@ -156,14 +156,14 @@ class Dilutions: #
         else:
             raise ValueError(f"expected 1 or 2 arguments, got {len(args)}.")
 
-    @property #
+    @property
     def dilutions(self):
         if self.override:
             return self.override
         else:
             return [self.base ** x for x in self.powers]
 
-    @property #
+    @property
     def labels(self):
         if self.override:
             format = lambda x: sci(x)
@@ -172,7 +172,7 @@ class Dilutions: #
 
         return [format(x) for x in self.dilutions]
 
-def dilution_list(argument): #
+def dilution_list(argument):
     tokens = argument.split()
 
     # If the dilution is specified as something like "10 ^ 2 3 4 5", calculate 
@@ -189,9 +189,9 @@ def dilution_list(argument): #
         dilutions = map(eval, tokens)
         return Dilutions(dilutions)
 
-def value_in(unit, cast=float): #
+def value_in(unit, cast=float):
 
-    def converter(argument): #
+    def converter(argument):
         import re
         unit.replace('μ', '[uμ]')
         value = r'([-+]?[0-9]*\.?[0-9]+)'
@@ -209,7 +209,7 @@ def value_in(unit, cast=float): #
 #
 # Throws exceptions in a few places where it should use directive.error().
 
-class ElectrotransformationDirective(Table): #
+class ElectrotransformationDirective(Table):
     has_content = True
     option_spec = {
             'dilutions': dilution_list,
@@ -218,7 +218,7 @@ class ElectrotransformationDirective(Table): #
             **Table.option_spec
     }
     
-    def run(self): #
+    def run(self):
         data = self.load_data()
         dilutions = self.options.get('dilutions', dilution_list('10 ^ 2 3 4 5'))
 
@@ -283,7 +283,7 @@ class ElectrotransformationDirective(Table): #
 
         return [table]
 
-    def load_data(self): #
+    def load_data(self):
         """
         Parse the content of the directive using YAML, then cast things and 
         fill in default values as necessary.
