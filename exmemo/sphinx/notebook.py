@@ -2,7 +2,7 @@
 
 import re
 import time
-from .. import Workspace
+from .. import app, Workspace
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx.roles import XRefRole
@@ -75,49 +75,95 @@ def doi_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     list of system messages.  Both are allowed to be empty.
     """
 
-    import metapub
+    # There are some inefficiencies due to this function being called once for 
+    # each role.  Ideally we'd like to only load the cache once, and ask for 
+    # all the DOIs we care about in a single request to the Crossref.  There's 
+    # probably a way to do this, but it would require some coordination between 
+    # roles.
+
+    # Dealing with all the roles together might also give me a way to line them 
+    # up in a <table>.  Maybe I want a bibliography directive or something...
+
+    # Also, would be nice to have formatting in the citations (i.e. bold, 
+    # italic, etc.) and to have a link to the actual paper (via the DOI).
+
+    import json
+    import habanero
     import requests
 
-    # https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python
-    class MarkupStripper(HTMLParser):
-        def __init__(self):
-            self.reset()
-            self.strict = False
-            self.convert_charrefs= True
-            self.fed = []
-        def handle_data(self, d):
-            self.fed.append(d)
-        def get_data(self):
-            return ''.join(self.fed)
-    def strip_html(html):
-        s = MarkupStripper()
-        s.feed(html)
-        return s.get_data()
+    # Try to cache queries.
+    cache_path = Path(app.user_cache_dir) / 'crossref.json'
+    cache = {}
 
-    # Look up the article metadata on CrossRef.
-    try:
-        crossref = metapub.CrossRef()
-        hits = crossref.query(text)
-        hit = crossref.get_top_result(hits)
+    if cache_path.exists():
+        with cache_path.open() as f:
+            cache = json.load(f)
 
-    # Give a useful error message is the article can't be found.
-    except metapub.exceptions.MetaPubError as e:
-        error = inliner.reporter.error(str(e), line=lineno)
-        problem = inliner.problematic(rawtext, rawtext, error)
-        return [problem], [error]
+    if text in cache:
+        meta = cache[text]
 
-    except requests.exceptions.ConnectionError as e:
-        warning = inliner.reporter.warning("Couldn't connect to CrossRef, may be offline.", line=lineno)
-        p = nodes.paragraph(text, text)
-        return [p], [warning]
+    else:
+        # Look up the article metadata on CrossRef.
+        try:
+            crossref = habanero.Crossref(mailto='kale_kundert@hms.harvard.edu')
+            meta = crossref.works(ids=[text])['message']
+
+            # The reference list is big, and we don't care about it, so don't 
+            # cache it.
+            if 'reference' in meta:
+                del meta['reference']
+
+            cache[text] = meta
+            cache_path.parent.mkdir(exist_ok=True)
+            with cache_path.open('w') as f:
+                json.dump(cache, f)
+
+        # Give a useful warning if the article can't be found.
+        except requests.exceptions.HTTPError as e:
+            warning = inliner.reporter.warning(f"No matches found for DOI: {text}", line=lineno)
+            p = nodes.paragraph(text, text)
+            return [p], [warning]
+
+        except requests.exceptions.ConnectionError as e:
+            warning = inliner.reporter.warning("Couldn't connect to CrossRef, may be offline.", line=lineno)
+            p = nodes.paragraph(text, text)
+            return [p], [warning]
 
     # Make a paragraph containing the citation.
-    if hit is None:
-        warning = inliner.reporter.warning(f"No matches found for DOI: {text}", line=lineno)
-        p = nodes.paragraph(text, text)
-        return [p], [warning]
 
-    citation = strip_html(hit['fullCitation'])
+    def format_author(author):
+        initials = ''.join(x[0] for x in author['given'].split())
+        return f"{author['family']} {initials}"
+
+    def format_authors(authors):
+        authors = [format_author(x) for x in authors]
+
+        if len(authors) == 1:
+            return authors[0]
+        elif len(authors) < 5:
+            return ", ".join(x for x in authors[:-1]) + " & " + authors[-1]
+        else:
+            return f"{authors[0]} et al"
+
+    def format_title(meta):
+        return meta['title'][0]
+
+    def format_journal_issue_date(meta):
+        issue = ':'.join(
+                meta[k] for k in ('volume', 'issue', 'page')
+                if k in meta
+        )
+        if issue:
+            issue += ' '
+
+        return f"{meta['container-title'][0]} {issue}({meta['issued']['date-parts'][0][0]})"
+
+    citation = (
+            f"{format_authors(meta['author'])}. "
+            f"{format_title(meta)}. "
+            f"{format_journal_issue_date(meta)}. "
+    )
+
     p = nodes.paragraph(citation, citation)
     return [p], []
 
