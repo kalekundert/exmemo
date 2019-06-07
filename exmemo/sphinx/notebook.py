@@ -197,6 +197,58 @@ class ExperimentRole(XRefRole):
                 has_explicit_title, title, link)
 
 
+
+class ProtocolDirective(Directive):
+
+    optional_arguments = 1
+    has_content = True
+
+    def run(self):
+        protocol = ProtocolNode()
+
+        self.state.nested_parse(self.content, self.content_offset, protocol)
+
+        if self.arguments:
+            from sphinx.directives.code import LiteralIncludeReader
+            from sphinx.util.nodes import set_source_info
+
+            # <literal_block highlight_args="{'linenostart': 1}" linenos="False" source="/home/kale/research/projects/201904_bind_dna/notebook/20190604_dnase_pick_qpcr_primers/20190604_pcr.txt" xml:space="preserve">
+            #     ...
+
+            # From `sphinx/directives/code.py`:
+
+            env = self.state.document.settings.env
+            location = self.state_machine.get_source_and_line(self.lineno)
+            rel_filename, filename = env.relfn2path(self.arguments[0])
+            env.note_dependency(rel_filename)
+
+            reader = LiteralIncludeReader(filename, self.options, env.config)
+            text, lines = reader.read(location=location)
+
+            literal = nodes.literal_block(text, text, source=filename)
+            set_source_info(self, literal)
+
+            protocol += literal
+
+        else:
+            print("No args, skipping.")
+
+        paragraph = nodes.paragraph()
+        paragraph += protocol
+        return [paragraph]
+
+class ProtocolNode(nodes.General, nodes.Element):
+
+    @staticmethod
+    def visit(visitor, node):
+        visitor.body.append('<details class="protocol"><summary>Protocol</summary>')
+
+    @staticmethod
+    def depart(visitor, node):
+        visitor.body.append('</details>')
+
+
+
 class UpdateDirective(Directive):
     """
     Define a directive specifically for adding new information to existing 
@@ -257,7 +309,6 @@ class ShowNodesDirective(Directive):
 
         return wrapper.children
 
-
 def setup(app):
     app.connect('source-read', add_expts_to_toc)
     app.connect('doctree-read', add_dates_to_toc)
@@ -267,6 +318,11 @@ def setup(app):
 
     app.add_directive('update', UpdateDirective)
     app.add_directive('show-nodes', ShowNodesDirective)
+
+    app.add_directive('protocol', ProtocolDirective)
+    app.add_node(ProtocolNode,
+            html=(ProtocolNode.visit, ProtocolNode.depart),
+    )
 
     css_path = Path(__file__).parent / 'tweaks.css'
     app.add_stylesheet(str(css_path))
