@@ -32,7 +32,6 @@ def run(cmd, verbose=True, **kwargs):
         print(f'$ {cmd_str}')
     return subprocess.run(cmd, **kwargs)
 
-
 class RsyncCollector:
     """
     Copy any files that have changed from the given (and possibly remote) 
@@ -128,7 +127,6 @@ class UsbCollector(RsyncCollector):
         A shell command to execute after running rsync, but before the USB 
         drive has been unmounted.  The command will be run from the project 
         data directory.
-    .
     """
 
     def __init__(self, src, dest=None, mountpoint=None, rsync=None, precmd=None, postcmd=None):
@@ -169,6 +167,38 @@ class UsbCollector(RsyncCollector):
             if not err:
                 print("USB safe to remove.")
 
+class GoogleDriveCollector:
+    """
+    Copy files from Google Drive into the project.  The copying is 
+    performed by 'skicka' <https://github.com/google/skicka>, which must 
+    already be installed and initialized.
+
+    src (required):
+        The file or directory in your Google Drive to copy, as an absolute 
+        path starting from the root of your drive.  Note that 'skicka' is 
+        smart enough to not download files that are already present locally.
+       
+    dest (default: '.'):
+        Where to copy the files to, relative to the project data directory.
+
+    postcmd (default: ''):
+        A shell command to execute after downloading any new files.  The 
+        command will be run from the project data directory.
+    """
+
+    def __init__(self, src, dest=None, postcmd=None):
+        self.src = Path(src)
+        self.dest = Path(dest or '.').expanduser()
+        self.postcmd = postcmd or ''
+
+    def sync(self, work, verbose):
+        dest = work.data_dir / self.dest
+        skicka = 'skicka', 'download', str(self.src), str(dest)
+        run(skicka, verbose, cwd=work.data_dir)
+
+        for postcmd in self.postcmd.split('\n'):
+            run(postcmd, verbose, cwd=work.data_dir, shell=True)
+    
 
 
 class BadCollectorConfig(Exception):
@@ -194,8 +224,6 @@ class UnknownCollectorType(Exception):
 Unknown data collector '{type}'.  Did you mean:
 
 {did_you_mean}"""
-
-
 
 # Make the collector docstrings line up right when they're indented and 
 # included in a usage string.

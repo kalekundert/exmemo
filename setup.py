@@ -105,6 +105,7 @@ setup(
         'exmemo.datacollectors': [
             'rsync=exmemo.collectors:RsyncCollector',
             'usb=exmemo.collectors:UsbCollector',
+            'gdrive=exmemo.collectors:GoogleDriveCollector',
         ],
     },
     classifiers=[
