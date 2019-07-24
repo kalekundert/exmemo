@@ -145,6 +145,8 @@ def ls():
 
     {shared_doc}
     """
+    from builtins import print
+
     args = cli.parse_args_via_docopt(shared_doc=shared_doc)
     work = Workspace.from_cwd(strict=False)
 
