@@ -165,7 +165,7 @@ Exmemo can also show you a protocol without printing it::
 
 What exactly this command does depends on what type of file the protocol is.  
 Text files will simply be printed to the terminal, python scripts will be 
-executed, documents (like *.doc and *.xls) will be opened in libreoffice, and 
+executed, documents (like \*.doc and \*.xls) will be opened in libreoffice, and 
 PDF files will be opened in your PDF viewer.  You can use the setuptools plugin 
 system to provide plugins for new filetypes, or to override the behaviors of 
 the existing ones.
