@@ -35,6 +35,7 @@ setup(
         'sphinx_rtd_theme',
         'toml',
         'wet_copy',
+        'openpyxl',
     ],
     entry_points={
         'console_scripts': [
