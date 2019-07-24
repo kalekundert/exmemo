@@ -68,7 +68,7 @@ class DataTable(Directive):
         xlsx_path_root, xlsx_path_abs = sphinx_env.relfn2path(str(xlsx_path))
         sphinx_env.note_dependency(xlsx_path_root)
 
-        book = openpyxl.load_workbook(filename=xlsx_path_abs)
+        book = openpyxl.load_workbook(filename=xlsx_path_abs, data_only=True)
 
         if sheet_name and sheet_name not in book.sheetnames:
             msg = f"sheet '{sheet_name}' does not exist"
@@ -85,18 +85,20 @@ class DataTable(Directive):
         else:
             sheet_data = sheet
 
-        table = list(sheet_data.values)
-
-        # Remove any data that doesn't have a header.
+        # Remove unlabeled columns and empty rows.
 
         header = list(sheet_data.values)[0]
         header_i = set(
                 i for i, cell in enumerate(header)
                 if cell is not None
         )
+        rows = [
+                row for row in list(sheet_data.values)[1:]
+                if not set(row) == set([None])
+        ]
         table = [
                 [cell for i, cell in enumerate(row) if i in header_i]
-                for row in list(sheet_data.values)[1:]
+                for row in rows
         ]
 
         # Render the table in HTML/javascript using `handsontable`.
