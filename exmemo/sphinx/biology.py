@@ -54,6 +54,12 @@ def align_cols(table, *alignments):
                         for cell, alignment in zip(row, alignments):
                             cell['classes'].append(f'{alignment}-align')
 
+def pdb_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    # Make a reference node
+    url = f'https://files.rcsb.org/download/{text.lower()}.cif'
+    ref = nodes.reference(text, name=text, text=text, refuri=url)
+    return [ref], []
+
 class OdDirective(Table):
     has_content = True
     option_spec = {
@@ -323,7 +329,10 @@ class ElectrotransformationDirective(Table):
         return data
 
 def setup(app):
-    # Add some science-themed directives.
+    # Add some science-themed roles and directives.
+    app.add_role('pdb', pdb_role)
+
     app.add_directive('od', OdDirective)
     app.add_directive('electrotransformation', ElectrotransformationDirective)
+
 
