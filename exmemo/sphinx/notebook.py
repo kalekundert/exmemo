@@ -171,8 +171,11 @@ class ExperimentRole(XRefRole):
     """
     Make a hyperlink to another experiment.
     
-    For example:
+    Usage:
+
         :expt:`20170329_test_multiple_spacers`
+
+    You must specify the full name to the experiment, including the date.
     """
     innernodeclass = nodes.inline
 
@@ -199,39 +202,118 @@ class ExperimentRole(XRefRole):
 
 
 class ProtocolDirective(Directive):
+    """
+    Display protocols in a collapsible widget.
+
+    Usage:
+
+        .. protocol:: <file-1> <file-2> ... <file-N>
+
+            <restructured text>
+
+            [***]
+
+            <restructured text>
+
+            ...
+
+    It's important for protocols to be as detailed as possible, but it's 
+    annoying when this detail overwhelms your notebook and gets in the way of 
+    data and conclusions that are usually more interesting.  The `protocol` 
+    directive helps with this by making protocols collapsible.  It also helps 
+    combine protocol information from files (e.g. what you were trying to do) 
+    and free-form text (e.g. what you actually did).
+
+    Any number of files can be specified as optional arguments.  These 
+    files will be incorporated into the document in the order specified.  Text 
+    files (i.e. files with the extension ".txt") will be copied into a 
+    preformatted block.  Any other files will made available to download.  The 
+    file arguments are separated by spaces.  Use quotes or backslashes (as you 
+    would in the shell) to escape any file names containing spaces.
+
+    The body of this directive can contain any regular restructured text.  By 
+    default, this text will be shown above any protocol files.  You can use 
+    also the pattern "***", alone on its own line, to control where your 
+    annotations appear with respect to the protocol files.  Each use of "***" 
+    will be replaced by the next protocol file to be displayed.  It's ok to 
+    specify "***" fewer times than there are protocol files; any left-over 
+    files will just be put at the end.
+    """
 
     optional_arguments = 1
+    final_argument_whitespace = True
     has_content = True
 
     def run(self):
+        from more_itertools import interleave_longest
+
         protocol = ProtocolNode()
 
-        self.state.nested_parse(self.content, self.content_offset, protocol)
+        def split_arguments():
+            import shlex
+            if not self.arguments:
+                return
+            for path in shlex.split(self.arguments[0]):
+                yield Path(path)
 
-        if self.arguments:
+        def split_content():
+            content_blocks = []
+
+            # Use slicing to split the blocks, because this automatically makes 
+            # properly configured docutils.statemachine.StringList views.
+            i = 0
+            for j, line in enumerate(self.content):
+                if line.strip() == '***':
+                    content_blocks += [self.content[i:j]]
+                    i = j + 1
+
+            content_blocks += [self.content[i:]]
+            return content_blocks
+
+        def attach_literal_node(path):
             from sphinx.directives.code import LiteralIncludeReader
             from sphinx.util.nodes import set_source_info
+            nonlocal protocol
 
-            # <literal_block highlight_args="{'linenostart': 1}" linenos="False" source="/home/kale/research/projects/201904_bind_dna/notebook/20190604_dnase_pick_qpcr_primers/20190604_pcr.txt" xml:space="preserve">
-            #     ...
+            if path.suffix == '.txt':
+                # <literal_block highlight_args="{'linenostart': 1}" 
+                # linenos="False" 
+                # source="/home/kale/research/projects/201904_bind_dna/notebook/20190604_dnase_pick_qpcr_primers/20190604_pcr.txt" 
+                # xml:space="preserve">
+                #     ...
 
-            # From `sphinx/directives/code.py`:
+                # From `sphinx/directives/code.py`:
+                env = self.state.document.settings.env
+                location = self.state_machine.get_source_and_line(self.lineno)
+                rel_filename, filename = env.relfn2path(str(path))
+                env.note_dependency(rel_filename)
 
-            env = self.state.document.settings.env
-            location = self.state_machine.get_source_and_line(self.lineno)
-            rel_filename, filename = env.relfn2path(self.arguments[0])
-            env.note_dependency(rel_filename)
+                reader = LiteralIncludeReader(filename, self.options, env.config)
+                text, lines = reader.read(location=location)
 
-            reader = LiteralIncludeReader(filename, self.options, env.config)
-            text, lines = reader.read(location=location)
+                literal_node = nodes.literal_block(text, text, source=filename)
+                set_source_info(self, literal_node)
 
-            literal = nodes.literal_block(text, text, source=filename)
-            set_source_info(self, literal)
+                protocol += [literal_node]
 
-            protocol += literal
+            else:
+                from sphinx.roles import specific_docroles
+                protocol += specific_docroles['download'](
+                        'download',
+                        rawtext=str(path),
+                        text=str(path),
+                        lineno=self.lineno,
+                        inliner=self.state.inliner,
+                )[0]
 
-        else:
-            print("No args, skipping.")
+        def attach_content_node(content):
+            self.state.nested_parse(content, content.offset(0), protocol)
+
+        content = [(attach_content_node, x) for x in split_content()]
+        literal = [(attach_literal_node, x) for x in split_arguments()]
+
+        for add_to_protocol, *args in interleave_longest(content, literal):
+            add_to_protocol(*args)
 
         paragraph = nodes.paragraph()
         paragraph += protocol
@@ -254,18 +336,19 @@ class UpdateDirective(Directive):
     Define a directive specifically for adding new information to existing 
     notebook entries.
 
-    .. update:: Dec 6, 2017
+    Usage:
 
-        Based on feedback I got at the conference, I repeated the analysis 
-        for this experiment using method X...
+        .. update:: <date>
 
-    This directive takes a date as a positional argument, and then any amount 
-    of text in an indented block.  It will render a box containing the given 
-    text with a header that reads "Update — {date}".
+            <restructured text>
+
+    This directive takes a date as a positional argument (typically a date), 
+    and then any amount of text in an indented block.  It will render a box 
+    containing the given text with a header that reads "Update — {argument}".
     """
     required_arguments = 1  # <date>
-    has_content = True
     final_argument_whitespace = True
+    has_content = True
 
     def run(self): #
         # Create the root admonition node.
@@ -292,11 +375,13 @@ class ShowNodesDirective(Directive):
     directive.  This is only meant to be a tool for developing and debugging 
     new Sphinx extensions.
 
-    .. show-nodes::
+    Example:
 
-        .. figure:: path/to/image.png
+        .. show-nodes::
 
-            A schematic of the reaction setup.
+            .. figure:: path/to/image.png
+
+                A schematic of the reaction setup.
     """
     has_content = True
 

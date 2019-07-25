@@ -28,6 +28,7 @@ setup(
         'fossilize',
         #'metapub',
         'habanero',
+        'more_itertools',
         'nonstdlib',
         'PyYAML',
         'sphinx',
