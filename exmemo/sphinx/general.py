@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import json
-import datetime
 import docutils.core
-import openpyxl
+import pandas as pd
 
 from pathlib import Path
+from functools import partial
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst import directives
 from jinja2 import Environment, FileSystemLoader
@@ -21,24 +20,18 @@ class DataTable(Directive):
     describing the data will be rendered below the table, if provided.
     
     Usage:
-        .. datatable:: <xlsx>
+        .. datatable:: <path>
 
             [<caption>]
 
     Arguments:
         <path>
-            The path to an *.xlsx file.
+            The path to a file containing the tabular data to display.  The 
+            following formats are supported: CSV, TSV, XLS, XLSX
             
         <caption>
             A description of the table.  Typically this would include a brief 
             title and detailed descriptions of each column.
-
-    Options:
-        :sheet:
-            Which sheet to display.  The default is to display the first.
-        :range:
-            Which cells to display, e.g. "A1:E5".  The default is to display 
-            all cells in the chosen worksheet.
 
     Derived from `sphinxcontrib-excel-table` by `hackerain`.
     """
@@ -61,46 +54,28 @@ class DataTable(Directive):
 
         sphinx_env = self.state.document.settings.env
 
-        xlsx_path = Path(self.arguments[0])
+        data_path = Path(self.arguments[0])
         sheet_name = self.options.get('sheet')
         range = self.options.get('range')
 
-        div_ids = ['datatable', xlsx_path.stem]
-        xlsx_path_root, xlsx_path_abs = sphinx_env.relfn2path(str(xlsx_path))
-        sphinx_env.note_dependency(xlsx_path_root)
+        div_ids = ['datatable', data_path.stem]
+        data_path_root, data_path_abs = sphinx_env.relfn2path(str(data_path))
+        sphinx_env.note_dependency(data_path_root)
 
-        book = openpyxl.load_workbook(filename=xlsx_path_abs, data_only=True)
+        parsers = {
+                '.csv': pd.read_csv,
+                '.tsv': partial(pd.read_csv, sep='\t'),
+                '.xls': pd.read_excel,
+                '.xlsx': pd.read_excel,
+        }
 
-        if sheet_name and sheet_name not in book.sheetnames:
-            msg = f"sheet '{sheet_name}' does not exist"
-            return [document.reporter.warning(msg, line=self.lineno)]
+        try:
+            parser = parsers[data_path.suffix]
+        except KeyError:
+            return [document.reporter.error(f"no known parser for '{datapath.suffix}'", line=self.lineno)]
 
-        if sheet_name:
-            sheet = book[sheet_name]
-            div_ids.append(sheet_name)
-        else:
-            sheet = book.worksheets[0]
-
-        if range:
-            sheet_data = sheet[range]
-        else:
-            sheet_data = sheet
-
-        # Remove unlabeled columns and empty rows.
-
-        header = list(sheet_data.values)[0]
-        header_i = set(
-                i for i, cell in enumerate(header)
-                if cell is not None
-        )
-        rows = [
-                row for row in list(sheet_data.values)[1:]
-                if not set(row) == set([None])
-        ]
-        table = [
-                [cell for i, cell in enumerate(row) if i in header_i]
-                for row in rows
-        ]
+        table = parser(data_path_abs)
+        header = pd.Series(table.columns)
 
         # Render the table in HTML/javascript using `handsontable`.
 
@@ -115,9 +90,9 @@ class DataTable(Directive):
                 'handsontable_js': PLUGIN_DIR / 'static' / 'handsontable.full.min.js',
 
                 'div_id': '_'.join(div_ids),
-                'data': to_json(table),
+                'data': table.to_json(orient='values'),
                 'caption': ' '.join(self.content),
-                'header': to_json([x for x in header if x is not None]),
+                'header': header.to_json(orient='values'),
         }
         jinja_env = Environment(
                 loader=FileSystemLoader(str(PLUGIN_DIR / 'templates')),
@@ -129,18 +104,6 @@ class DataTable(Directive):
 
         html = jinja_template.render(**jinja_context)
         return [docutils.nodes.raw('', html, format='html')]
-
-def to_json(data):
-
-    class DateTimeEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, datetime.date):
-                return obj.strftime('%Y-%m-%d')
-            if isinstance(obj, datetime.datetime):
-                return obj.strftime("%Y-%m-%d %H:%M:%S")
-            return json.JSONEncoder.default(self, obj)
-
-    return json.dumps(data, cls=DateTimeEncoder)
 
 
 def setup(app):
