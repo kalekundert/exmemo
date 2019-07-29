@@ -249,6 +249,9 @@ class ProtocolDirective(Directive):
 
         protocol = ProtocolNode()
 
+        if not self.content and not self.arguments:
+            warning = self.state.inliner.reporter.warning(f"empty protocol.")
+
         def split_arguments():
             import shlex
             if not self.arguments:
@@ -307,7 +310,8 @@ class ProtocolDirective(Directive):
                 )[0]
 
         def attach_content_node(content):
-            self.state.nested_parse(content, content.offset(0), protocol)
+            if content:
+                self.state.nested_parse(content, content.offset(0), protocol)
 
         content = [(attach_content_node, x) for x in split_content()]
         literal = [(attach_literal_node, x) for x in split_arguments()]
