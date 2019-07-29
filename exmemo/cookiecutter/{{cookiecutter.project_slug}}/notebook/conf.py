@@ -21,6 +21,7 @@ extensions = [ #
     'sphinxcontrib.programoutput',
     'exmemo.sphinx.notebook',
     'exmemo.sphinx.biology',
+    'exmemo.sphinx.general',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

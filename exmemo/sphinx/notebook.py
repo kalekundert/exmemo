@@ -250,7 +250,7 @@ class ProtocolDirective(Directive):
         protocol = ProtocolNode()
 
         if not self.content and not self.arguments:
-            warning = self.state.inliner.reporter.warning(f"empty protocol.")
+            self.state.inliner.reporter.warning(f"empty protocol.")
 
         def split_arguments():
             import shlex

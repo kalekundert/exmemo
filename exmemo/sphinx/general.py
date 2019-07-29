@@ -22,6 +22,7 @@ class DataTable(Directive):
     
     Usage:
         .. datatable:: <xlsx>
+
             [<caption>]
 
     Arguments:
