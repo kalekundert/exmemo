@@ -37,6 +37,7 @@ setup(
         'toml',
         'wet_copy',
         'openpyxl',
+        'stepwise',
     ],
     entry_points={
         'console_scripts': [
@@ -49,14 +50,10 @@ setup(
             'open=exmemo.commands.note:open',
             'build=exmemo.commands.note:build',
             'browse=exmemo.commands.note:browse',
-            'show=exmemo.commands.protocol:show',
-            'print=exmemo.commands.protocol:print',
-            'archive=exmemo.commands.protocol:archive',
             'sync=exmemo.commands.data:sync',
             'link=exmemo.commands.data:link',
             'project=exmemo.commands.main:project',
             'note=exmemo.commands.main:note',
-            'protocol=exmemo.commands.main:protocol',
             'data=exmemo.commands.main:data',
             'config=exmemo.commands.main:config',
             'debug=exmemo.commands.main:debug',
@@ -80,14 +77,6 @@ setup(
             'gel=exmemo.commands.data:gel',
             'ls=exmemo.commands.data:ls',
         ],
-        'exmemo.commands.protocol': [
-            'show=exmemo.commands.protocol:show',
-            'edit=exmemo.commands.protocol:edit',
-            'print=exmemo.commands.protocol:print',
-            'archive=exmemo.commands.protocol:archive',
-            'plugins=exmemo.commands.protocol:plugins',
-            'ls=exmemo.commands.protocol:ls',
-        ],
         'exmemo.commands.config': [
             'get=exmemo.commands.config:get',
             'set=exmemo.commands.config:set',
@@ -97,12 +86,6 @@ setup(
             'config=exmemo.commands.debug:config',
             'readers=exmemo.commands.debug:readers',
             'collectors=exmemo.commands.debug:collectors',
-        ],
-        'exmemo.protocolreaders': [
-            'txt=exmemo.readers:TxtReader',
-            'exe=exmemo.readers:ScriptReader',
-            'doc=exmemo.readers:DocReader',
-            'pdf=exmemo.readers:PdfReader',
         ],
         'exmemo.datacollectors': [
             'rsync=exmemo.collectors:RsyncCollector',

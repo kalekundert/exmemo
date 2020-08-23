@@ -12,7 +12,9 @@ from subprocess import DEVNULL
 from datetime import datetime
 from pathlib import Path
 from appdirs import AppDirs
-from . import readers, utils
+from more_itertools import one
+from . import utils
+from .errors import *
 
 app = AppDirs('exmemo')
 
@@ -27,7 +29,7 @@ class Workspace:
         characteristic set of files and directories.
         """
 
-        dir = given_dir = Path(dir)
+        dir = given_dir = Path(dir).resolve()
         work = given_work = Workspace(dir)
 
         while not work.has_project_files:
@@ -41,6 +43,17 @@ class Workspace:
         return work
 
     @classmethod
+    def from_path(cls, path, strict=True):
+        """
+        Create a workspace object containing given path.  This involves 
+        descending the directory hierarchy looking for the root of the project, 
+        which should contain a characteristic set of files and directories.
+        """
+        path = Path(path)
+        dir = path if path.is_dir() else path.parent
+        return cls.from_dir(dir, strict)
+
+    @classmethod
     def from_cwd(cls, strict=True):
         """
         Create a workspace object containing given directory (or the current 
@@ -49,6 +62,10 @@ class Workspace:
         characteristic set of files and directories.
         """
         return cls.from_dir(cls.get_cwd(), strict)
+
+    @classmethod
+    def from_sphinx_env(cls, env):
+        return cls.from_path(env.doc2path(env.docname))
 
     @staticmethod
     def get_cwd():
@@ -80,9 +97,7 @@ class Workspace:
 
 
     def __init__(self, root):
-        # Use `os.path.abspath()` instead of `Path.resolve()` to avoid 
-        # resolving any symlinks in the path.
-        self._root = Path(os.path.abspath(root))
+        self._root = Path(root).resolve()
 
         if not self.config_paths:
             self._config = {}
@@ -133,28 +148,8 @@ class Workspace:
         return self.root_dir / 'notebook'
 
     @property
-    def current_experiment_entry(self):
-        cwd = self.get_cwd().resolve()
-        if self.notebook_dir not in cwd.parents:
-            return None
-        for expt in self.iter_experiment_entries():
-            if cwd == expt.parent or expt.parent in cwd.parents:
-                return expt
-
-    @property
-    def current_experiment_dir(self):
-        entry = self.current_experiment_entry
-        return entry and entry.parent
-
-    @property
-    def protocols_dir(self):
-        return self.root_dir / 'protocols'
-
-    @property
-    def protocols_dirs(self):
-        local_dirs = [self.current_experiment_dir, self.protocols_dir]
-        shared_dirs = [Path(x).expanduser() for x in self.config.get('shared_protocols', [])]
-        return [x for x in local_dirs + shared_dirs if x and x.exists()]
+    def notebook_html_index(self):
+        return self.notebook_dir / 'build' / 'html' / 'index.html'
 
     @property
     def has_project_files(self):
@@ -168,101 +163,7 @@ class Workspace:
             return False
         if not self.notebook_dir.exists():
             return False
-        if not self.protocols_dir.exists():
-            return False
         return True
-
-    def iter_data(self, substr=None):
-        return iter_paths_matching_substr(self.data_dir, substr)
-
-    def iter_experiments(self, substr=None):
-        yield from (x.parent for x in self.iter_experiment_entries(substr))
-
-    def iter_experiment_entries(self, substr=None):
-        yield from (x for x in iter_paths_matching_substr(
-            self.notebook_dir, substr, f'/{8*"[0-9]"}_{{0}}/{{0}}.rst'))
-
-    def iter_notebook_entries(self, substr=None):
-        yield from (x for x in iter_paths_matching_substr(
-            self.notebook_dir, substr, '/{}.rst'))
-        yield from self.iter_experiment_entries(substr)
-
-    def iter_protocols(self, substr=None):
-        for dir in self.protocols_dirs:
-            yield from self.iter_protocols_from_dir(dir, substr)
-
-    def iter_protocols_from_dir(self, dir, substr=None):
-        from . import readers
-        extensions = readers.get_known_extensions()
-        if substr is not None: extensions.add('')
-
-        include = ['{}' + x for x in extensions]
-        exclude = [
-                f'**/{8*"[0-9]"}_*',  # Exclude date-stamped protocols.
-        ]
-        yield from iter_paths_matching_substr(dir, substr, include, exclude)
-
-    def pick_path(self, substr, paths, default=None, no_choices=None):
-        paths = list(paths)
-
-        # Complain if there are no paths to pick from.
-        if len(paths) == 0:
-            raise no_choices or CantMatchSubstr('choices', substr)
-
-        # If there's only one option, return it.
-        if len(paths) == 1:
-            return paths[0]
-
-        # If the user didn't specify anything, just make our best guess and run 
-        # with it.
-        if substr is None:
-            if default is not None:
-                return default
-
-            # Sort the paths alphabetically and return the last one, which will 
-            # be the most recent if the paths are prefixed by date.
-            resolved_paths = [x.resolve() for x in paths]
-            resolved_paths.sort()
-
-            return paths[-1]
-
-        # If the user specified a pattern, but there are multiple matches, ask 
-        # for clarification.
-        #
-        # Once I've written the config-file system, there should be an option 
-        # to change how this works (i.e. CLI vs GUI vs automatic choice).
-        i = utils.pick_one(x.name for x in paths)
-        return paths[i]
-
-    def pick_data(self, substr):
-        return self.pick_path(
-                substr, self.iter_data(substr),
-                no_choices=CantMatchSubstr('data files', substr),
-        )
-
-    def pick_experiment(self, substr):
-        return self.pick_path(
-                substr, self.iter_experiments(substr),
-                default=self.current_experiment_dir,
-                no_choices=CantMatchSubstr('experiments', substr),
-        )
-
-    def pick_notebook_entry(self, substr):
-        return self.pick_path(
-                substr, self.iter_notebook_entries(substr),
-                default=self.current_experiment_entry,
-                no_choices=CantMatchSubstr('notebook entries', substr),
-        )
-
-    def pick_protocol(self, substr):
-        return self.pick_path(
-                substr, self.iter_protocols(substr),
-                no_choices=CantMatchSubstr('protocols', substr),
-        )
-
-    def pick_protocol_reader(self, path, args):
-        path = Path(path)
-        return readers.pick_reader(path, args)
 
     def init_project(self, title):
         from cookiecutter.main import cookiecutter
@@ -296,6 +197,78 @@ class Workspace:
 {'*' * len(title)}
 """)
         self.launch_editor(rst)
+
+    def iter_experiments(self, recursive=True):
+        yield from iter_experiments(
+                self,
+                self.notebook_dir,
+                recursive=recursive,
+        )
+
+    def iter_experiments_toc(self):
+        yield from iter_experiments(self, self.notebook_dir, recursive=False)
+
+    def find_experiment(self, id):
+        return one(
+                (x for x in self.iter_experiments() if x.id == id),
+                too_short=ExperimentNotFound(id),
+                too_long=IntegrityError(f"multiple experiments with id #{id}---this should never happen and must be repaired manually"),
+        )
+
+    def pick_experiment(self, tag=None):
+        try:
+            id = int(tag)
+
+        except ValueError:
+            cwd_expt = Experiment(self, os.getcwd())
+            no_default = None if cwd_expt.check_paths() else UserError("must specify an experiment")
+
+            return pick_via_tag(
+                tag,
+                self.iter_experiments(),
+                get_path=lambda x: x.root_dir_rel,
+                get_extra_score=lambda x: x.id,
+                default=cwd_expt,
+                no_default=no_default,
+                no_matches=UserError(f"no experiments matching '{tag}'"),
+            )
+
+        else:
+            return self.find_experiment(id)
+
+    def assign_experiment_ids(self):
+        next_id = max(
+                (x.id for x in self.iter_experiments() if x.id is not None),
+                default=1
+        )
+
+        expts = {True: [], False: []}
+        for expt in self.iter_experiments():
+            expts[expt.id is not None].append(expt)
+
+        next_id = max((x.id for x in expts[True]), default=0) + 1
+        expts[False].sort(key=lambda x: os.path.getmtime(x.root_dir))
+
+        for new_expt in expts[False]:
+            new_expt.assign_id(next_id)
+            next_id += 1
+
+    def iter_data(self, substr=None):
+        return iter_paths_matching_substr(self.data_dir, substr)
+
+    def pick_data(self, tag):
+        return pick_via_tag(
+            tag,
+            self.iter_data(),
+            get_path=lambda x: x.relative_to(self.data_dir),
+            default=cwd_expt,
+            no_matches=UserError(f"no data files matching '{tag}'"),
+        )
+
+        return self.pick_path(
+                substr, self.iter_data(substr),
+                no_choices=CantMatchSubstr('data files', substr),
+        )
 
     def launch_editor(self, path):
         if platform.system() == 'Windows':
@@ -340,27 +313,205 @@ class Workspace:
 
         subprocess.run(make, cwd=self.notebook_dir)
 
-    def get_notebook_entry(self, dir):
-        dir = Path(dir)
-        date, slug = dir.name.split('_', 1)
-        return dir / f"{slug}.rst"
-
     def get_data_collectors():
         pass
 
 
-class WorkspaceNotFound(IOError):
-    show_message_and_die = True
+class Experiment:
+    """
+    A directory containing all the information relevant to a single experiment, 
+    e.g. notes, data files, scripts, etc.
+    
+    In order to be considered as experiment
+    A directory is an experiment directory if the following criteria are 
+    satisfied:
 
-    def __init__(self, dir):
-        self.message = f"'{dir}' is not a workspace."
+    - Subdirectory of notebook/
+    - Contains a `notes.txt` file
+    """
+
+    @classmethod
+    def from_dir(cls, dir, work=None, strict=True):
+        if work is None:
+            work = Workspace.from_dir(dir)
+
+        expt = Experiment(work, dir)
+
+        if strict and not expt.check_paths():
+            raise ExperimentNotFound(dir)
+
+        return expt
+
+    @classmethod
+    def from_sphinx_env(cls, env, work=None, strict=True):
+        doc_path = Path(env.doc2path(env.docname))
+        return cls.from_dir(doc_path.parent, work=None, strict=strict)
 
 
-class CantMatchSubstr(Exception):
-    show_message_and_die = True
+    def __init__(self, work, root):
+        self._work = work
+        self._root = Path(root).resolve()
+        self._id_path = self._root / '.id'
+        self._note_path = self._root / 'notes.rst'
 
-    def __init__(self, type, substr):
-        self.message = f"No {type} matching '{substr}'."
+    def __repr__(self):
+        rel_dir = self.root_dir.relative_to(self.workspace.notebook_dir)
+        return f"{self.__class__.__qualname__}(root='{rel_dir}')"
+
+    @property
+    def workspace(self):
+        return self._work
+
+    @property
+    def root_dir(self):
+        return self._root
+
+    @property
+    def root_dir_rel(self):
+        return self._root.relative_to(self._work.notebook_dir)
+
+    @property
+    def note_path(self):
+        return self._note_path
+
+    @property
+    def id(self):
+        try:
+            return int(self._id_path.read_text())
+        except (NotADirectoryError, FileNotFoundError):
+            return None
+
+    @property
+    def parent(self):
+        return self.get_ancestor(1)
+
+    @property
+    def title(self):
+        notes = self.note_path.read_text()
+        return notes.splitlines()[1]
+
+    def check_paths(self):
+        return self.note_path.exists() and any(
+                self.workspace.notebook_dir.samefile(x)
+                for x in self.root_dir.parents
+        )
+
+    def assign_id(self, id):
+        if self.id is not None:
+            raise IntegrityError(f"can't assign id #{id} to experiment #{self.id}")
+
+        self._id_path.write_text(str(id))
+
+    def get_ancestor(self, level=1):
+        parent = self.from_dir(self.root_dir.parent, work=self.workspace)
+
+        if level == 1:
+            return parent
+        elif level > 1:
+            return parent.get_ancestor(level - 1)
+        else:
+            raise UserError(f"level must be ≥ 1, not {level}")
+
+    def iter_experiments(self):
+        yield from iter_experiments(
+                self.workspace,
+                self.root_dir,
+                recursive=True,
+        )
+
+    def iter_experiments_toc(self):
+        yield from iter_experiments(
+                self.workspace,
+                self.root_dir,
+                recursive=False,
+        )
+
+# These exceptions are a mess:
+# - Don't inherit from a common class
+# - Too fine-grained
+# - Don't set message in superclass
+
+
+def pick_via_tag(
+        tag,
+        choices,
+        get_path=None,
+        get_extra_score=None,
+        default=None,
+        no_matches=None,
+        no_default=None
+    ):
+    # This function should maybe be factored out into it's own library.  I'm 
+    # not crazy about adding stepwise as a dependency.
+    from stepwise.library import _match_tag as match_tag
+
+    # Allow choices to be an iterator.
+    choices = list(choices)
+
+    if not choices:
+        if no_default:
+            raise no_default
+        else:
+            return default
+
+    scores = []
+
+    for choice in choices:
+        path = get_path(choice)
+        score = match_tag(tag, path)
+        extra_score = get_extra_score(choice) if get_extra_score else None
+
+        if score:
+            scores.append((score, extra_score, choice))
+
+    matches = [x[2] for x in sorted(scores)]
+
+    if not matches:
+        raise no_matches or UserError(f"no matches for '{tag}'")
+
+    if len(matches) == 1:
+        return matches[0]
+    else:
+        # There should be a config setting to change how this works (i.e. CLI 
+        # vs GUI vs automatic choice).
+        return pick_one_via_cli(matches, get_path)
+
+def pick_one_via_cli(choices, get_title=None):
+    # Print everything to sys.stderr, because stdout is often redirected.
+    import sys, functools, builtins
+    print = functools.partial(builtins.print, file=sys.stderr)
+    input = lambda: print(end='> ') or builtins.input()
+
+    titles = [get_title(x) if get_title else x for x in choices]
+
+    print("Did you mean?")
+    for i, title in enumerate(titles, 1):
+        print(f"({i}) {title}")
+
+    # Keep track of the number of choices here so we don't need to call `len()` 
+    # later on.  This allows the choices argument to be an iterator.
+    num_choices = i
+
+    def is_input_ok(x):
+        if x.lower() == 'q':
+            raise EOFError
+
+        try: x = int(x)
+        except ValueError:
+            return False
+
+        if x < 1 or x > num_choices:
+            return False
+
+        return True
+
+    choice = input()
+    
+    while not is_input_ok(choice):
+        print(f"Please enter a number between 1 and {num_choices}.")
+        choice = input()
+
+    return choices[int(choice) - 1]
 
 def slug_from_title(title):
 
@@ -372,6 +523,19 @@ def slug_from_title(title):
             # Any other character gets dropped.
 
     return title.translate(Sanitizer())
+
+def iter_experiments(work, root, recursive=True):
+    for path in root.iterdir():
+        if not path.is_dir():
+            continue
+
+        expt = Experiment(work, path)
+        if not expt.check_paths():
+            continue
+
+        yield expt
+        if recursive:
+            yield from iter_experiments(work, expt.root_dir, recursive)
 
 def iter_paths_matching_substr(dir, substr=None, include=None, exclude=None, symlinks=True, include_origin=False):
     substr = '*' if substr is None else f'*{substr}*'

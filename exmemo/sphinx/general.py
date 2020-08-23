@@ -7,11 +7,13 @@ from pathlib import Path
 from functools import partial
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst import directives
+from docutils import nodes
+from sphinx.util.docutils import SphinxDirective
 from jinja2 import Environment, FileSystemLoader
 
 PLUGIN_DIR = Path(__file__).parent
 
-class DataTable(Directive):
+class DataTable(SphinxDirective):
     """
     Create a table using the data from the given spreadsheet file.
 
@@ -52,15 +54,16 @@ class DataTable(Directive):
         # Parse the indicated parts of the given file (e.g. worksheets, rows, 
         # selections, etc.) into a list-of-lists data structure (`table`).
 
-        sphinx_env = self.state.document.settings.env
-
         data_path = Path(self.arguments[0])
         sheet_name = self.options.get('sheet')
         range = self.options.get('range')
 
         div_ids = ['datatable', data_path.stem]
-        data_path_root, data_path_abs = sphinx_env.relfn2path(str(data_path))
-        sphinx_env.note_dependency(data_path_root)
+        data_path_root, data_path_abs = self.env.relfn2path(str(data_path))
+        self.env.note_dependency(data_path_root)
+
+        if not Path(data_path_abs).exists():
+            raise self.error(f"data table not found: {data_path}")
 
         parsers = {
                 '.csv': pd.read_csv,
@@ -108,6 +111,6 @@ class DataTable(Directive):
 
 def setup(app):
     app.add_directive('datatable', DataTable)
-    app.add_stylesheet(str(PLUGIN_DIR / 'static' / 'handsontable.full.min.css'))
+    app.add_css_file(str(PLUGIN_DIR / 'static' / 'handsontable.full.min.css'))
     #app.add_javascript(str(PLUGIN_DIR / 'static' / 'handsontable.full.min.js'))
 

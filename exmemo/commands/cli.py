@@ -145,7 +145,7 @@ def main(func):
             sys.exit(1)
         except Exception as e:
             if hasattr(e, 'show_message_and_die'):
-                print(e.message)
+                print(getattr(e, 'message', str(e)))
                 sys.exit(2)
             else:
                 raise

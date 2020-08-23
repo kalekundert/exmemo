@@ -17,10 +17,11 @@ def new():
             words separated by spaces.  Use quotes so the shell won't interpret 
             it as multiple arguments.
     """
-    args = cli.parse_args_via_docopt()
-    work = Workspace.from_cwd()
+    #args = cli.parse_args_via_docopt()
+    #work = Workspace.from_cwd()
 
-    work.init_experiment(args['<title>'])
+    #work.init_experiment(args['<title>'])
+    raise NotImplementedError
 
 @cli.priority(30)
 def edit():
@@ -42,9 +43,9 @@ def edit():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    path = work.pick_notebook_entry(args['<substr>'])
+    expt = work.pick_experiment(args['<substr>'])
 
-    work.launch_editor(path)
+    work.launch_editor(expt.note_path)
 
 @cli.priority(30)
 def open():
@@ -68,7 +69,7 @@ def open():
     work = Workspace.from_cwd()
     expt = work.pick_experiment(args['<substr>'])
 
-    work.launch_terminal(expt)
+    work.launch_terminal(expt.root_dir)
 
 @cli.priority(30)
 def directory():
@@ -102,7 +103,17 @@ def directory():
     work = Workspace.from_cwd()
     expt = work.pick_experiment(args['<substr>'])
 
-    print(expt.resolve())
+    print(expt.root_dir.resolve())
+
+@cli.priority(30)
+def rename():
+    """\
+    Rename 
+
+    Usage:
+        exmemo note mv [<substr>] <new_title>
+    """
+    raise NotImplementedError
 
 @cli.priority(30)
 def build():
@@ -147,9 +158,10 @@ def browse():
     """
     args = cli.parse_args_via_docopt()
     work = Workspace.from_cwd()
-    url = work.notebook_dir / 'build' / 'html' / 'index.html'
-    
-    work.launch_browser(f'file://{url}', args['--new-window'])
+    work.launch_browser(
+            f'file://{work.notebook_html_index}',
+            args['--new-window']
+    )
 
 def ls():
     """\
@@ -166,5 +178,5 @@ def ls():
     workspace = Workspace.from_cwd()
 
     for expt in workspace.iter_experiments(args['<substr>']):
-        print(expt.name)
+        print(f'{expt.id:5s} {expt.title}')
 
