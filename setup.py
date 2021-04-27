@@ -24,7 +24,7 @@ setup(
         'appdirs',
         'cookiecutter',
         'docopt',
-        'formic-py3',
+        'formic2',
         'fossilize',
         #'metapub',
         'habanero',
