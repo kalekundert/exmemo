@@ -17,11 +17,10 @@ def new():
             words separated by spaces.  Use quotes so the shell won't interpret 
             it as multiple arguments.
     """
-    #args = cli.parse_args_via_docopt()
-    #work = Workspace.from_cwd()
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
 
-    #work.init_experiment(args['<title>'])
-    raise NotImplementedError
+    work.init_experiment(args['<title>'])
 
 @cli.priority(30)
 def edit():
