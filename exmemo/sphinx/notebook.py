@@ -50,7 +50,7 @@ class BuildToc(SphinxTransform):
         
         toc_refs = [
                 ref_from_expt(self.env, expt, absolute=False)
-                for expt in toc_expts
+                for expt in sorted(toc_expts, key=lambda x: x.id)
         ]
 
         # sort...
@@ -235,20 +235,26 @@ class ExperimentRole(XRefRole):
         tuple.
         """
 
+        process_link = super().process_link
+        defer_to_super = lambda: process_link(
+                    env, refnode, has_explicit_title, title, target)
+
         # Find the experiment being referred to:
         try:
             target_id = int(target)
         except ValueError:
-            return super().process_link(
-                    env, refnode, has_explicit_title, title, target)
+            return defer_to_super()
 
         if target_id < 0:
             curr_expt = Experiment.from_sphinx_env(env)
             target_expt = curr_expt.get_ancestor(-target_id)
 
         else:
-            work = Workspace.from_sphinx_env(env)
-            target_expt = work.find_experiment(target_id)
+            try:
+                work = Workspace.from_sphinx_env(env)
+                target_expt = work.find_experiment(target_id)
+            except ExperimentNotFound as err:
+                return defer_to_super()
 
         # Annotate the cross-ref node:
         refnode['refdomain'] = 'std'
