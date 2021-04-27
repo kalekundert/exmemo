@@ -55,10 +55,10 @@ class DataTable(SphinxDirective):
         # selections, etc.) into a list-of-lists data structure (`table`).
 
         data_path = Path(self.arguments[0])
-        sheet_name = self.options.get('sheet')
+        sheet_name = self.options.get('sheet') or 0
         range = self.options.get('range')
 
-        div_ids = ['datatable', data_path.stem]
+        div_ids = ['datatable', data_path.stem, str(sheet_name)]
         data_path_root, data_path_abs = self.env.relfn2path(str(data_path))
         self.env.note_dependency(data_path_root)
 
@@ -68,8 +68,8 @@ class DataTable(SphinxDirective):
         parsers = {
                 '.csv': pd.read_csv,
                 '.tsv': partial(pd.read_csv, sep='\t'),
-                '.xls': pd.read_excel,
-                '.xlsx': pd.read_excel,
+                '.xls': partial(pd.read_excel, sheet_name=sheet_name),
+                '.xlsx': partial(pd.read_excel, sheet_name=sheet_name),
         }
 
         try:
