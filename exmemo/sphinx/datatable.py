@@ -2,6 +2,7 @@
 
 import docutils.core
 import pandas as pd
+import warnings
 
 from pathlib import Path
 from functools import partial
@@ -68,16 +69,19 @@ class DataTable(SphinxDirective):
         parsers = {
                 '.csv': pd.read_csv,
                 '.tsv': partial(pd.read_csv, sep='\t'),
-                '.xls': partial(pd.read_excel, sheet_name=sheet_name),
-                '.xlsx': partial(pd.read_excel, sheet_name=sheet_name),
+                '.xls': partial(pd.read_excel, sheet_name=sheet_name, engine='openpyxl'),
+                '.xlsx': partial(pd.read_excel, sheet_name=sheet_name, engine='openpyxl'),
         }
 
         try:
             parser = parsers[data_path.suffix]
         except KeyError:
-            return [document.reporter.error(f"no known parser for '{datapath.suffix}'", line=self.lineno)]
+            return [self.state.document.reporter.error(f"no known parser for '{data_path.suffix}'", line=self.lineno)]
 
-        table = parser(data_path_abs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message="Workbook contains no default style")
+            table = parser(data_path_abs)
+
         header = pd.Series(table.columns)
 
         # Render the table in HTML/javascript using `handsontable`.

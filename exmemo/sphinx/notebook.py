@@ -95,125 +95,6 @@ class BuildToc(SphinxTransform):
             if title := find_title(self.document):
                 title.parent.append(toc)
 
-def doi_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    """
-    Insert a citation (including the authors, title, journal, and publication 
-    date) given any valid PubMed identifier (i.e. PMID, PMCID, or DOI).
-
-    For example:
-        :pubmed:`10.1093/nar/gkw908`
-
-    Arguments
-    =========
-    name:       The role name used in the document.
-    rawtext:    The entire markup snippet, with role.
-    text:       The text marked with the role.
-    lineno:     The line number where rawtext appears in the input.
-    inliner:    The inliner instance that called us.
-    options:    Directive options for customization.
-    content:    The directive content for customization.
-
-    Returns
-    =======
-    A 2 part tuple containing a list of nodes to insert into the document and a 
-    list of system messages.  Both are allowed to be empty.
-    """
-
-    # There are some inefficiencies due to this function being called once for 
-    # each role.  Ideally we'd like to only load the cache once, and ask for 
-    # all the DOIs we care about in a single request to the Crossref.  There's 
-    # probably a way to do this, but it would require some coordination between 
-    # roles.
-
-    # Dealing with all the roles together might also give me a way to line them 
-    # up in a <table>.  Maybe I want a bibliography directive or something...
-
-    # Also, would be nice to have formatting in the citations (i.e. bold, 
-    # italic, etc.) and to have a link to the actual paper (via the DOI).
-
-    import json
-    import habanero
-    import requests
-
-    # Try to cache queries.
-    cache_path = Path(app.user_cache_dir) / 'crossref.json'
-    cache = {}
-
-    if cache_path.exists():
-        with cache_path.open() as f:
-            cache = json.load(f)
-
-    if text in cache:
-        meta = cache[text]
-
-    else:
-        # Look up the article metadata on CrossRef.
-        try:
-            crossref = habanero.Crossref(mailto='kale_kundert@hms.harvard.edu')
-            meta = crossref.works(ids=[text])['message']
-
-            # The reference list is big, and we don't care about it, so don't 
-            # cache it.
-            if 'reference' in meta:
-                del meta['reference']
-
-            cache[text] = meta
-            cache_path.parent.mkdir(exist_ok=True)
-            with cache_path.open('w') as f:
-                json.dump(cache, f)
-
-        # Give a useful warning if the article can't be found.
-        except requests.exceptions.HTTPError as e:
-            warning = inliner.reporter.warning(f"No matches found for DOI: {text}", line=lineno)
-            p = n.paragraph(text, text)
-            return [p], [warning]
-
-        except requests.exceptions.ConnectionError as e:
-            warning = inliner.reporter.warning("Couldn't connect to CrossRef, may be offline.", line=lineno)
-            p = n.paragraph(text, text)
-            return [p], [warning]
-
-    # Make a paragraph containing the citation.
-
-    def format_author(author):
-        initials = ''.join(x[0] for x in author['given'].split())
-        return f"{author['family']} {initials}"
-
-    def format_authors(authors):
-        authors = [format_author(x) for x in authors]
-
-        if len(authors) == 1:
-            return authors[0]
-        elif len(authors) < 5:
-            return ", ".join(x for x in authors[:-1]) + " & " + authors[-1]
-        else:
-            return f"{authors[0]} et al"
-
-    def format_title(meta):
-        try:
-            return meta['title'][0]
-        except IndexError:
-            return ''
-
-    def format_journal_issue_date(meta):
-        issue = ':'.join(
-                meta[k] for k in ('volume', 'issue', 'page')
-                if k in meta
-        )
-        if issue:
-            issue += ' '
-
-        return f"{meta['container-title'][0]} {issue}({meta['issued']['date-parts'][0][0]})"
-
-    citation = (
-            f"{format_authors(meta['author'])}. "
-            f"{format_title(meta)}. "
-            f"{format_journal_issue_date(meta)}. "
-    )
-
-    p = n.paragraph(citation, citation)
-    return [p], []
-
 class ExperimentRole(XRefRole):
     """
     Make a hyperlink to another experiment by referencing its id number:
@@ -478,7 +359,6 @@ def setup(app):
     app.add_transform(BuildToc)
 
     app.add_role('expt', ExperimentRole())
-    app.add_role('doi', doi_role)
 
     app.add_directive('update', UpdateDirective)
     app.add_directive('protocol', ProtocolDirective)
