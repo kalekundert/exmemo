@@ -93,3 +93,8 @@ def test_citation_from_dict():
     assert _ex.dict_from_citation(c) == d
     assert _ex.citation_from_dict(d) == c
 
+
+def test_strip_html():
+    assert _ex.strip_html('Hello World') == 'Hello World'
+    assert _ex.strip_html('Hello <b>World</b>') == 'Hello World'
+    assert _ex.strip_html('Hello &amp; World') == 'Hello & World'

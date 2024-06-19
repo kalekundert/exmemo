@@ -28,21 +28,6 @@ def doi_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
 
     For example:
         :doi:`10.1093/nar/gkw908`
-
-    Arguments
-    =========
-    name:       The role name used in the document.
-    rawtext:    The entire markup snippet, with role.
-    text:       The text marked with the role.
-    lineno:     The line number where rawtext appears in the input.
-    inliner:    The inliner instance that called us.
-    options:    Directive options for customization.
-    content:    The directive content for customization.
-
-    Returns
-    =======
-    A 2 part tuple containing a list of nodes to insert into the document and a 
-    list of system messages.  Both are allowed to be empty.
     """
 
     cache_path = Path(app.user_cache_dir) / 'doi.json'
@@ -72,7 +57,7 @@ def doi_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
         if citation.title is None:
             return '[html]'
 
-        title = citation.title.strip()
+        title = strip_html(citation.title.strip())
 
         if title[-1] in ['.', '!', '?']:
             return title
@@ -220,6 +205,11 @@ def citation_from_dict(d):
             for author in d['authors']
     ]
     return Citation(**d)
+
+def strip_html(html):
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, features='html.parser')
+    return soup.get_text()
 
 class CitationError(RuntimeError):
 
