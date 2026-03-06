@@ -9,7 +9,7 @@ from .. import __version__, utils, get_plugins
 def run_subcommand(group, name, level=None):
     """
     Run the subcommand with the given group and name.  This is cool because by 
-    using `pkg_resources`, other packages can add commands to `exmemo`!
+    using entry points, other packages can add commands to `exmemo`!
     """
     # Find all the commands that match what the user typed.
     known_subcommands = get_subcommands(group)
