@@ -25,8 +25,8 @@ def run_subcommand(group, name, level=None):
     # If two or more subcommands match, ask the user which one they meant.
     if len(matching_subcommands) > 1:
         cmd = group.split('.'); del cmd[1]
-        i = utils.pick_one(f'{" ".join(cmd)} {x.name}' for x in matching_subcommands)
-        matching_subcommands = [matching_subcommands[i]]
+        subcmd = utils.pick_one_via_cli(matching_subcommands, lambda x: f'{" ".join(cmd)} {x.name}')
+        matching_subcommands = [subcmd]
 
     # By this point, there should only be one matching subcommand.
     assert len(matching_subcommands) == 1

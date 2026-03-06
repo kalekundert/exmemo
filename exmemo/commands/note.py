@@ -1,7 +1,247 @@
 #!/usr/bin/env python3
 
 from . import cli
-from .. import Workspace
+from .. import Workspace, Experiment, ExperimentNotFound, iter_experiments
+
+from math import inf
+from pathlib import Path
+
+# If no experiments specified:
+# - show all experiments with matching statuses
+#
+# If experiments specified:
+# - show all specified experiments regardless of status
+
+@cli.priority(30)
+def status():
+    """\
+    Show which experiments are currently ready/in progress/complete/etc.
+
+    Usage:
+        exmemo [note] status [<expt>...] [-nrpbca] [-RA]
+
+    Arguments:
+        <expt>
+            Which experiments to show statuses for.  If no experiments are 
+            specified, the default is to show all experiments that have the 
+            specified statuses, or "ready" and "in progress" if no statuses are 
+            specified.  If one or more experiments are specified but no 
+            statuses are, all the specified experiments will be shown.
+
+            If no experiments are specified, think of this command as providing 
+            an overview of the whole project.  By default, it will display all 
+            experiments that are either "ready" or "in progress".  If one or 
+            more experiments are specified, think of this command as 
+
+    Options:
+        -n --new
+            Show new experiments.  This is the default status that all 
+            experiments start with.
+
+        -r --ready
+            Show experiments that are ready to start (i.e. fully planned, all 
+            materials available, etc.).
+
+        -p --in-progress
+            Show experiments that are currently in progress (i.e. data still 
+            being collected or analyzed).
+
+        -b --blocked
+            Show experiments that are waiting for other experiments to 
+            complete.
+
+        -c --complete
+            Show experiments that have been completed.
+
+        -a --abandoned
+            Show experiments that have been abandoned (i.e. that you are not 
+            planning to complete in the immediate future).
+
+        -A --all
+            Show all experiments, regardless of their status.  This is 
+            equivalent to `-nrpbca`.
+
+        -R --recursive
+            Include any descendants of the specified experiments.
+
+    Experiments typically advance from "new" to "ready" to "in progress" to 
+    "complete".  Experiments may be "abandoned" at any point in this pipeline, 
+    and are considered "blocked" if they have prerequisite experiments that are 
+    not either "complete" or "abandoned".
+
+    The default (if no experiments are specified) is to show all "ready" and 
+    "in progress" experiments.
+
+    By default, all "ready" and "in progress" experiments will be shown.  You 
+    should try to keep only a handful of experiments in these categories at any 
+    one time.  If there are too many, it may be a sign that your concentration 
+    is split in too many directions.  Consider temporarily "abandoning" any 
+    experiments that you do not have immediate plans to complete, in order to 
+    focus your attention on those that you do.
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+
+    def iter_selected_experiments():
+        if not args['<expt>']:
+            yield from work.iter_experiments()
+        else:
+            for dir in args['<expt>']:
+                dir = Path(dir)
+                if not dir.is_dir():
+                    continue
+
+                # If the given directory is an experiment, yield it.
+                try:
+                    yield Experiment.from_dir(dir, work)
+                except ExperimentNotFound:
+                    pass
+                else:
+                    if not args['--recursive']:
+                        return
+
+                # Yield all experiments contained in the given directory.
+                yield from iter_experiments(
+                        work, dir,
+                        recursive=args['--recursive'],
+                )
+
+    expts = {}
+    for expt in iter_selected_experiments():
+        expts.setdefault(expt.status, set()).add(expt)
+
+    status_flags = {
+            'new': '--new',
+            'ready': '--ready',
+            'in progress': '--in-progress',
+            'complete': '--complete',
+            'abandoned': '--abandoned',
+            'blocked': '--blocked',
+    }
+    status_toggles = {
+            k: args[status_flags[k]] or args['--all']
+            for k in status_flags
+    }
+
+    if not any(status_toggles.values()):
+        if args['<expt>']:
+            status_toggles = {k: True for k in status_toggles}
+        else:
+            status_toggles['ready'] = True
+            status_toggles['in progress'] = True
+
+    def by_id(x):
+        return x.id or inf
+
+    for status, toggle in status_toggles.items():
+        if not toggle:
+            continue
+        if status not in expts:
+            continue
+
+        print(status.upper())
+
+        for expt in sorted(expts.get(status, []), key=by_id):
+            print(f'{expt.id or "?":<5} {expt.root_dir_rel}')
+
+            if status == 'blocked':
+                print('      blocked by: ' + ','.join(map(str, expt.blocking_prereq_ids)))
+
+        print()
+
+@cli.priority(30)
+def update():
+    """\
+    Change the status (e.g. ready, in progress, complete, etc.) of the given
+    experiment.
+
+    Usage:
+        exmemo [note] update [<id_or_substr>] 
+            (-n | -r | -p | -c | -a | -b <id> | -B <id>)
+
+    Arguments:
+        <id_or_substr>
+            The experiment to update.  If not specified, the current working 
+            directory will be used (if it is in fact an experiment).
+
+    Options:
+        -n --new
+            Mark the experiment as new.
+
+        -r --ready
+            Mark the experiment as ready.
+
+        -p --in-progress
+            Mark the experiment as in progress.
+
+        -b --blocked-by <id_or_substr>
+            Mark the experiment as blocked by the experiment identified by the 
+            given id/tag.  It is an error to specify an non-unique tag.
+
+        -B --not-blocked-by <id_or_substr>
+            Mark the experiment as *not* blocked by the experiment identified 
+            by the given id/tag.  It is an error to specify an non-unique tag.
+
+        -c --complete
+            Mark the experiment as complete.
+
+        -a --abandoned
+            Mark the experiment as abandoned.
+            Show experiments that have been abandoned (i.e. that you are not 
+            planning to complete in the immediate future).
+    
+    See `exmemo note status -h` for more information on each status.
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+    expt = work.pick_experiment(args['<id_or_substr>'])
+
+    if args['--new']:
+        expt.status = 'new'
+
+    if args['--ready']:
+        expt.status = 'ready'
+
+    if args['--in-progress']:
+        expt.status = 'in progress'
+
+    if b := args['--blocked-by']:
+        expt.prereqs.add(work.pick_experiment(b))
+        print(f"Prerequisites: {', '.join(sorted(expt.prereq_ids))}")
+
+    if b := args['--not-blocked-by']:
+        expt.prereqs.discard(work.pick_experiment(b))
+        print(f"Prerequisites: {', '.join(sorted(expt.prereq_ids))}")
+
+    if args['--complete']:
+        expt.status = 'complete'
+
+    if args['--abandoned']:
+        expt.status = 'abandoned'
+
+    if expt.id:
+        print(f"Set experiment #{expt.id} status to: {expt.status.upper()}")
+    else:
+        print(f"Set experiment status to: {expt.status.upper()}")
+
+@cli.priority(30)
+def find():
+    """\
+    Find the notebook entry with the given id/tag.
+
+    Usage:
+        exmemo [note] edit [<id_or_substr>]
+
+    Arguments:
+        <substr>
+            The experiment to find.  You can specify either an id number of a 
+            partial name (enough to be unique).
+    """
+    args = cli.parse_args_via_docopt()
+    work = Workspace.from_cwd()
+    expt = work.pick_experiment(args['<id_or_substr>'])
+
+    print(f'{expt.id or "?":<5} {expt.root_dir_rel}')
 
 @cli.priority(30)
 def new():
@@ -105,16 +345,6 @@ def directory():
     print(expt.root_dir.resolve())
 
 @cli.priority(30)
-def rename():
-    """\
-    Rename 
-
-    Usage:
-        exmemo note mv [<substr>] <new_title>
-    """
-    raise NotImplementedError
-
-@cli.priority(30)
 def build():
     """\
     Render the lab notebook to HTML using Sphinx.
@@ -167,15 +397,38 @@ def ls():
     Print the names of any existing experiments.
 
     Usage:
-        exmemo note ls [<substr>]
-
-    Arguments:
-        <substr>
-            Only print the experiments matching the given text.
+        exmemo note ls
     """
     args = cli.parse_args_via_docopt()
-    workspace = Workspace.from_cwd()
+    work = Workspace.from_cwd()
+    expts = sorted(work.iter_experiments(), key=lambda x: x.id or inf)
 
-    for expt in workspace.iter_experiments(args['<substr>']):
-        print(f'{expt.id:5s} {expt.title}')
+    for expt in expts:
+        print(f'{expt.id or "?":<5} {expt.root_dir_rel}')
 
+
+
+def serve():
+    """\
+    Launch a web-server for the current workspace.
+
+    Usage:
+        exmemo note serve
+    """
+    from exmemo.webserver import create_app, refresh_sphinx
+
+    work = Workspace.from_cwd()
+
+    app = create_app(work)
+    app.run(debug=True)
+
+def refresh():
+    """
+    Regenerate the cache files used by the web server.
+
+    Usage:
+        exmemo note refresh
+    """
+    from exmemo.webserver import refresh_sphinx
+    work = Workspace.from_cwd()
+    refresh_sphinx(work)

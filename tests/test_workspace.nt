@@ -1,0 +1,546 @@
+test_tags_load:
+  -
+    tmp_files:
+      {}
+    expected:
+      {}
+  -
+    tmp_files:
+      a:
+    expected:
+      a:
+        []
+  -
+    tmp_files:
+      a:
+      b:
+    expected:
+      a:
+        []
+      b:
+        []
+  -
+    tmp_files:
+      a:
+        > - b
+    expected:
+      a:
+        [b]
+  -
+    tmp_files:
+      a:
+        > - b
+        > - c
+    expected:
+      a:
+        [b,c]
+
+test_tags_update:
+  -
+    id: add
+    update:
+      > tags.add('a', '1')
+    expected:
+      a:
+        [1]
+    expected_files:
+      a:
+        > - 1
+  -
+    id: add
+    tmp_files:
+      a:
+        > - 1
+    update:
+      > tags.add('a', '2')
+    expected:
+      a:
+        [1, 2]
+    expected_files:
+      a:
+        > - 1
+        > - 2
+  -
+    id: discard
+    tmp_files:
+      a:
+        > - 1
+    update:
+      > tags.discard('a', '1')
+    expected:
+      {}
+    deleted_files:
+      - a
+  -
+    id: discard-missing-key
+    update:
+      > tags.discard('a', 1)
+    expected:
+      {}
+    deleted_files:
+      - a
+  -
+    id: discard-missing-value
+    tmp_files:
+      a:
+        > - 1
+    update:
+      > tags.discard('a', '2')
+    expected:
+      a:
+        [1]
+    expected_files:
+      a:
+        > - 1
+
+test_prereqs_load:
+  -
+    id: empty
+    tmp_files:
+      notebook:
+        type: dir
+    
+    prereqs_dir: notebook/expt_1/.expt/prereqs
+    expected:
+      []
+  -
+    id: empty
+    tmp_files:
+      notebook/expt_1/.expt/prereqs:
+        type: dir
+    
+    prereqs_dir: notebook/expt_1/.expt/prereqs
+    expected:
+      []
+  -
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+      notebook/expt_2/.expt/prereqs/1:
+    
+    prereqs_dir: notebook/expt_2/.expt/prereqs
+    expected:
+      [1]
+  -
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+      notebook/expt_3/notes.rst:
+      notebook/expt_3/.expt/id: 3
+      notebook/expt_3/.expt/prereqs/1:
+      notebook/expt_3/.expt/prereqs/2:
+    
+    prereqs_dir: notebook/expt_3/.expt/prereqs
+    expected:
+      [1, 2]
+
+test_prereqs_update:
+  -
+    id: add
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    prereqs_dir: notebook/expt_1/.expt/prereqs
+
+    update:
+      > prereqs.add(2)
+
+    expected:
+      [2]
+    expected_files:
+      - notebook/expt_1/.expt/prereqs/2
+  -
+    id: add
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+      notebook/expt_3/notes.rst:
+      notebook/expt_3/.expt/id: 3
+    
+    prereqs_dir: notebook/expt_1/.expt/prereqs
+
+    update:
+      > prereqs.add(3)
+    expected:
+      [2,3]
+    expected_files:
+      - notebook/expt_1/.expt/prereqs/2
+      - notebook/expt_1/.expt/prereqs/3
+  -
+    id: discard
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    prereqs_dir: notebook/expt_1/.expt/prereqs
+
+    update:
+      > prereqs.discard(2)
+
+    expected:
+      []
+    deleted_files:
+      - notebook/expt_1/.expt/prereqs/2
+  -
+    id: discard
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+      notebook/expt_1/.expt/prereqs/3:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+      notebook/expt_3/notes.rst:
+      notebook/expt_3/.expt/id: 3
+    
+    prereqs_dir: notebook/expt_1/.expt/prereqs
+
+    update:
+      > prereqs.discard(3)
+    expected:
+      [2]
+    expected_files:
+      - notebook/expt_1/.expt/prereqs/2
+    deleted_files:
+      - notebook/expt_1/.expt/prereqs/3
+
+test_experiment_status:
+  -
+    id: default
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+    expected:
+      1: new
+  -
+    id: load-new
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: new
+
+    expected:
+      1: new
+  -
+    id: load-ready
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: ready
+
+    expected:
+      1: ready
+  -
+    id: load-in-progress
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: in progress
+
+    expected:
+      1: in progress
+  -
+    id: load-complete
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: complete
+
+    expected:
+      1: complete
+  -
+    id: load-abandoned
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: abandoned
+
+    expected:
+      1: abandoned
+  -
+    id: load-blocked-by-new
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    expected:
+      1: blocked
+      2: new
+  -
+    id: load-blocked-by-ready
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+      notebook/expt_2/.expt/status: ready
+
+    expected:
+      1: blocked
+      2: ready
+  -
+    id: load-blocked-by-in-progress
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+      notebook/expt_2/.expt/status: in progress
+
+    expected:
+      1: blocked
+      2: in progress
+  -
+    id: load-not-blocked-by-complete
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+      notebook/expt_2/.expt/status: complete
+
+    expected:
+      1: new
+      2: complete
+  -
+    id: load-not-blocked-because-complete
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: complete
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    expected:
+      1: complete
+      2: new
+  -
+    id: load-not-blocked-by-abandoned
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+      notebook/expt_2/.expt/status: abandoned
+
+    expected:
+      1: new
+      2: abandoned
+  -
+    id: load-not-blocked-because-abandoned
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+      notebook/expt_1/.expt/status: abandoned
+      notebook/expt_1/.expt/prereqs/2:
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    expected:
+      1: abandoned
+      2: new
+  -
+    id: set-new
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+    exec:
+      > EXPT[1].status = 'new'
+
+    expected:
+      1: new
+  -
+    id: set-ready
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+    exec:
+      > EXPT[1].status = 'ready'
+
+    expected:
+      1: ready
+  -
+    id: set-in-progress
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+    exec:
+      > EXPT[1].status = 'in progress'
+
+    expected:
+      1: in progress
+  -
+    id: set-complete
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+    exec:
+      > EXPT[1].status = 'complete'
+
+    expected:
+      1: complete
+  -
+    id: set-abandoned
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+    exec:
+      > EXPT[1].status = 'abandoned'
+
+    expected:
+      1: abandoned
+  -
+    id: set-blocked-by-new
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+
+    expected:
+      1: blocked
+      2: new
+  -
+    id: set-blocked-by-ready
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+      > EXPT[2].status = 'ready'
+
+    expected:
+      1: blocked
+      2: ready
+  -
+    id: set-blocked-by-in-progress
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+      > EXPT[2].status = 'in progress'
+
+    expected:
+      1: blocked
+      2: in progress
+  -
+    id: set-not-blocked-by-complete
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+      > EXPT[2].status = 'complete'
+
+    expected:
+      1: new
+      2: complete
+  -
+    id: set-not-blocked-because-complete
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+      > EXPT[1].status = 'complete'
+
+    expected:
+      1: complete
+      2: new
+  -
+    id: set-not-blocked-by-abandoned
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+      > EXPT[2].status = 'abandoned'
+
+    expected:
+      1: new
+      2: abandoned
+  -
+    id: set-not-blocked-by-abandoned
+    tmp_files:
+      notebook/expt_1/notes.rst:
+      notebook/expt_1/.expt/id: 1
+
+      notebook/expt_2/notes.rst:
+      notebook/expt_2/.expt/id: 2
+
+    exec:
+      > EXPT[1].prereqs.add(2)
+      > EXPT[1].status = 'abandoned'
+
+    expected:
+      1: abandoned
+      2: new
+
+
