@@ -45,7 +45,7 @@ def test_get_citation_from_crossref():
     assert c.journal == "Communications of the ACM"
     assert c.issue == "60:6:84-90"
     assert c.year == 2017
-    assert c.url == 'http://dx.doi.org/10.1145/3065386'
+    assert c.url == 'https://doi.org/10.1145/3065386'
 
 def test_get_citation_from_datacite():
     c = _ex.get_citation_from_datacite('10.48550/arXiv.1706.03762')
