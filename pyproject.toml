@@ -1,0 +1,116 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "exmemo"
+authors = [
+  {name = "Kale Kundert", email = "kale@thekunderts.net"},
+]
+readme = 'README.rst'
+dynamic = ["version", "description"]
+requires-python = "~=3.8"
+dependencies = [
+  'appdirs',
+  'cookiecutter',
+  'docopt',
+  'formic2',
+  'fossilize',
+  'habanero',
+  #'metapub',
+  'more_itertools',
+  'nestedtext',
+  'nonstdlib',
+  'openpyxl',
+  'PyYAML',
+  'reprfunc',
+  'sphinx',
+  'sphinxcontrib-programoutput',
+  'sphinx_rtd_theme',
+  'stepwise',
+  'toml',
+  'voluptuous',
+  'wet_copy',
+]
+
+[project.optional-dependencies]
+test = [
+  'pytest',
+  'pytest-cov',
+  'pytest_tmp_files',
+  'parametrize_from_file',
+  'coveralls',
+  'beautifulsoup4',
+]
+doc = [
+  'sphinx',
+  'sphinx_rtd_theme',
+  'autoclasstoc',
+  'sphinx-toolbox',
+]
+
+[project.urls]
+'Documentation' = 'https://exmemo.readthedocs.io/en/latest/'
+'Version Control' = 'https://github.com/kalekundert/exmemo'
+'Bug Tracker' = 'https://github.com/kalekundert/exmemo/issues'
+'Continuous Integration' = 'https://github.com/kalekundert/exmemo/actions'
+'Test Coverage' = 'https://coveralls.io/github/kalekundert/exmemo'
+
+[project.scripts]
+exmemo = 'exmemo.commands.main:main'
+
+[project.entry-points."exmemo.commands"]
+init = 'exmemo.commands.project:init'
+status = 'exmemo.commands.note:status'
+update = 'exmemo.commands.note:update'
+new = 'exmemo.commands.note:new'
+edit = 'exmemo.commands.note:edit'
+open = 'exmemo.commands.note:open'
+build = 'exmemo.commands.note:build'
+browse = 'exmemo.commands.note:browse'
+sync = 'exmemo.commands.data:sync'
+link = 'exmemo.commands.data:link'
+project = 'exmemo.commands.main:project'
+note = 'exmemo.commands.main:note'
+data = 'exmemo.commands.main:data'
+config = 'exmemo.commands.main:config'
+debug = 'exmemo.commands.main:debug'
+
+[project.entry-points."exmemo.commands.project"]
+init = 'exmemo.commands.project:init'
+root = 'exmemo.commands.project:root'
+
+[project.entry-points."exmemo.commands.note"]
+status = 'exmemo.commands.note:status'
+update = 'exmemo.commands.note:update'
+new = 'exmemo.commands.note:new'
+edit = 'exmemo.commands.note:edit'
+open = 'exmemo.commands.note:open'
+directory = 'exmemo.commands.note:directory'
+build = 'exmemo.commands.note:build'
+browse = 'exmemo.commands.note:browse'
+ls = 'exmemo.commands.note:ls'
+serve = 'exmemo.commands.note:serve'
+refresh = 'exmemo.commands.note:refresh'
+
+[project.entry-points."exmemo.commands.data"]
+sync = 'exmemo.commands.data:sync'
+link = 'exmemo.commands.data:link'
+gel = 'exmemo.commands.data:gel'
+ls = 'exmemo.commands.data:ls'
+
+[project.entry-points."exmemo.commands.config"]
+get = 'exmemo.commands.config:get'
+set = 'exmemo.commands.config:set'
+edit = 'exmemo.commands.config:edit'
+
+[project.entry-points."exmemo.commands.debug"]
+config = 'exmemo.commands.debug:config'
+readers = 'exmemo.commands.debug:readers'
+collectors = 'exmemo.commands.debug:collectors'
+
+[project.entry-points."exmemo.datacollectors"]
+rsync = 'exmemo.collectors:RsyncCollector'
+usb = 'exmemo.collectors:UsbCollector'
+gdrive = 'exmemo.collectors:GoogleDriveCollector'
+
