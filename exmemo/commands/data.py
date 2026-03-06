@@ -74,9 +74,9 @@ def link():
     Make a symbolic link to the indicated data file.
 
     Usage:
-        exmemo [data] link <substr> [<dir>]
+        exmemo [data] link <substr> [<dir>] [-f]
 
-    Arguments
+    Arguments:
         <substr>
             A string specifying the data file to link.  You can provide any 
             substring from the name of the data file.  If the substring is not 
@@ -85,6 +85,10 @@ def link():
         <dir>
             The directory where the link will be created.  By default, this is 
             the current working directory ('.').
+
+    Options:
+        -f --force
+            Overwrite existing files.
             
     This command is most commonly used to link data files into particular 
     experiments in the notebook directory.  Thus the data directory is a 
@@ -96,7 +100,21 @@ def link():
     data = work.pick_data(args['<substr>'])
     link = Path(args['<dir>'] or '.') / data.name
 
-    link.symlink_to(data)
+    if link.exists():
+        if args['--force']:
+            link.unlink()
+        else:
+            print(f"{link} already exists; use '-f' to overwrite")
+            return
+
+    # `Path.relative_to()` doesn't seem to be able to use '..', and so doesn't 
+    # work for this application.  `os.path.relpath()` doesn't have this 
+    # problem.
+
+    import os.path
+    target = os.path.relpath(data, link.resolve().parent)
+
+    link.symlink_to(Path(target))
 
 def gel():
     """
