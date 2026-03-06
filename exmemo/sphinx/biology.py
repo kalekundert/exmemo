@@ -57,7 +57,7 @@ def align_cols(table, *alignments):
 def pdb_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
     # Make a reference node
     url = f'https://files.rcsb.org/download/{text.lower()}.cif'
-    ref = nodes.reference(text, name=text, text=text, refuri=url)
+    ref = nodes.reference(text.upper(), name=text, text=text, refuri=url)
     return [ref], []
 
 class OdDirective(Table):
